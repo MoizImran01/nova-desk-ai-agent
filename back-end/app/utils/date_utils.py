@@ -12,6 +12,7 @@ Python, with no LLM guessing involved.
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 from dataclasses import dataclass
+import dateparser
 
 WEEKDAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
 
@@ -66,18 +67,37 @@ def resolve_weekday(
                          confirmation_question=question)
 
 
-def resolve_relative_term(term: str, today: date) -> ResolvedDate:
+def resolve_relative_term(term: str, today: date, base_date: date | None = None) -> ResolvedDate:
     term = term.strip().lower()
+    reference_date = base_date if base_date else today
+    
     if term == "today":
         d = today
     elif term == "tomorrow":
         d = today + timedelta(days=1)
+    elif term in ("next day", "the next day", "day after", "the day after", "day after tomorrow"):
+        days_to_add = 2 if "tomorrow" in term else 1
+        d = reference_date + timedelta(days=days_to_add)
+    elif term in ("previous day", "day before", "the day before"):
+        d = reference_date - timedelta(days=1)
     else:
         raise ValueError(f"Unrecognized relative term: {term}")
     return ResolvedDate(d, d.strftime("%Y-%m-%d"), needs_confirmation=False)
 
 
-def resolve_explicit(date_str: str, today: date) -> ResolvedDate:
-    """User gave an actual date already, e.g. '2026-07-04'. Just validate it."""
-    d = datetime.strptime(date_str, "%Y-%m-%d").date()
+def resolve_explicit(date_str: str, today: date, base_date: date | None = None) -> ResolvedDate:
+    """User gave an explicit date, e.g. '2026-07-04' or '14th August'."""
+    reference = datetime.combine(base_date if base_date else today, datetime.min.time())
+    parsed = dateparser.parse(
+        date_str, 
+        settings={
+            'RELATIVE_BASE': reference,
+            'PREFER_DATES_FROM': 'future',
+            'STRICT_PARSING': False
+        }
+    )
+    if not parsed:
+        raise ValueError(f"Could not parse explicit date: {date_str}")
+    
+    d = parsed.date()
     return ResolvedDate(d, d.strftime("%Y-%m-%d"), needs_confirmation=False)

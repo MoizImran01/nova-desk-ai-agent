@@ -251,14 +251,20 @@ def collect_appointment_details(state: AgentState) -> dict:
     qualifier = response.get("date_qualifier") or "none"
 
     if expr_type == "weekday" and expr_value:
-        resolved = resolve_weekday(expr_value, today, qualifier=None if qualifier == "none" else qualifier)
-        response["appointment_date"] = resolved.date_str
-        response["date_confirmed"] = not resolved.needs_confirmation
-        response["_pending_confirmation_question"] = resolved.confirmation_question
+        try:
+            resolved = resolve_weekday(expr_value, today, qualifier=None if qualifier == "none" else qualifier)
+            response["appointment_date"] = resolved.date_str
+            response["date_confirmed"] = not resolved.needs_confirmation
+            response["_pending_confirmation_question"] = resolved.confirmation_question
+        except ValueError:
+            pass
     elif expr_type == "relative" and expr_value:
-        resolved = resolve_relative_term(expr_value, today)
-        response["appointment_date"] = resolved.date_str
-        response["date_confirmed"] = True
+        try:
+            resolved = resolve_relative_term(expr_value, today)
+            response["appointment_date"] = resolved.date_str
+            response["date_confirmed"] = True
+        except ValueError:
+            pass
     elif expr_type == "explicit" and expr_value:
         try:
             resolved = resolve_explicit(expr_value, today)
@@ -594,21 +600,38 @@ def collect_modification_details(state: AgentState) -> dict:
             merged["appointment_id"] = matched_appt.get("appointment_id")
         merged["date_confirmed"] = existing.get("date_confirmed", False)
     else:
+        # Determine base_date from the appointment we are modifying
+        base_date = today
+        if merged.get("appointment_id"):
+            for appt in existing_appointments:
+                if appt.get("appointment_id") == merged["appointment_id"]:
+                    try:
+                        base_date = datetime.strptime(appt["appointment_date"], "%Y-%m-%d").date()
+                    except Exception:
+                        pass
+                    break
+
         if expr_type == "weekday" and expr_value:
-            resolved = resolve_weekday(
-                expr_value, today,
-                qualifier=None if qualifier == "none" else qualifier
-            )
-            merged["new_appointment_date"] = resolved.date_str
-            merged["date_confirmed"] = not resolved.needs_confirmation
-            merged["_pending_confirmation_question"] = resolved.confirmation_question
+            try:
+                resolved = resolve_weekday(
+                    expr_value, today,
+                    qualifier=None if qualifier == "none" else qualifier
+                )
+                merged["new_appointment_date"] = resolved.date_str
+                merged["date_confirmed"] = not resolved.needs_confirmation
+                merged["_pending_confirmation_question"] = resolved.confirmation_question
+            except ValueError:
+                pass
         elif expr_type == "relative" and expr_value:
-            resolved = resolve_relative_term(expr_value, today)
-            merged["new_appointment_date"] = resolved.date_str
-            merged["date_confirmed"] = True
+            try:
+                resolved = resolve_relative_term(expr_value, today, base_date=base_date)
+                merged["new_appointment_date"] = resolved.date_str
+                merged["date_confirmed"] = True
+            except ValueError:
+                pass
         elif expr_type == "explicit" and expr_value:
             try:
-                resolved = resolve_explicit(expr_value, today)
+                resolved = resolve_explicit(expr_value, today, base_date=base_date)
                 merged["new_appointment_date"] = resolved.date_str
                 merged["date_confirmed"] = True
             except ValueError:
