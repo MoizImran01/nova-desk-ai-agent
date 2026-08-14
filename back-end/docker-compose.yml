@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  # --------------------------------------------------------
+  # PostgreSQL: The Primary Relational Database
+  # Stores Users, Sessions, Messages, and Appointments
+  # --------------------------------------------------------
+  postgres:
+    image: postgres:15-alpine
+    container_name: nova_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: novadesk_user
+      POSTGRES_PASSWORD: novadesk_password_secure_123
+      POSTGRES_DB: novadesk_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U novadesk_user -d novadesk_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # --------------------------------------------------------
+  # pgAdmin: Database Administration GUI
+  # Essential for viewing data during local development
+  # --------------------------------------------------------
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: nova_pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@novadesk.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # --------------------------------------------------------
+  # ChromaDB: The Vector Database
+  # Stores embeddings for Med Spa FAQs and Policies (RAG)
+  # --------------------------------------------------------
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: nova_chromadb
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - chromadb_data:/chroma/chroma
+    environment:
+      - IS_PERSISTENT=TRUE
+      - PERSIST_DIRECTORY=/chroma/chroma
+
+volumes:
+  postgres_data:
+  chromadb_data:
