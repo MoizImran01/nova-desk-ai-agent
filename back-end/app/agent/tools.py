@@ -11,15 +11,16 @@ from datetime import datetime
 import difflib
 from zoneinfo import ZoneInfo
 
-vector_store = get_vector_store()
-
 def retreive_faqs(query: str) -> str:
     """
     Retrieve FAQs from the knowledge base
     """
+    vector_store = get_vector_store()
+
     retriever = vector_store.as_retriever(search_type="similarity", search_kwargs={"k": 3})
     retrieved_docs = retriever.invoke(query)
     formatted_faqs = format_faqs(retrieved_docs)
+    
     return formatted_faqs
 
 def get_user_appointments(conversation_id: str) -> list[Appointment]:

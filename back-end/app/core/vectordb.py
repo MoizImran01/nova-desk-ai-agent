@@ -1,11 +1,20 @@
-import chromadb
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_chroma import Chroma
+import os
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_pinecone import PineconeVectorStore
 from app.core.config import settings
 
-embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-chroma_client = chroma_client = chromadb.HttpClient(host="localhost", port=8000)
+# 1. Initialize Google's Cloud Embeddings
+embeddings = GoogleGenerativeAIEmbeddings(
+    model="models/gemini-embedding-001",
+    google_api_key=settings.GOOGLE_GEMINI_API_KEY,
+    output_dimensionality=768
+)
+
+os.environ["PINECONE_API_KEY"] = settings.PINECONE_API_KEY
 
 def get_vector_store():
-    return Chroma(client=chroma_client, collection_name="med_spa_faqs", embedding_function=embeddings)
 
+    return PineconeVectorStore(
+        index_name="nova-spa-faqs", 
+        embedding=embeddings
+    )

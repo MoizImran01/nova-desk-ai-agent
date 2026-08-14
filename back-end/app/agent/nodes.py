@@ -1,25 +1,56 @@
-from app.agent.state import AgentState
-from app.schemas.agent import IntentClassification
-from app.agent.tools import retreive_faqs, check_available_appointment_slots, book_appointment, get_appointments_by_email, modify_appointment
-from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
-from typing import Literal
-from app.agent.chat_model import get_intent_classification_model, get_collect_appointment_details_model, get_handle_appointment_booking_model, get_handle_retreive_faqs_model, get_collect_reschedule_intent_model, get_handle_appointment_lookup_model, get_collect_modification_details_model, get_handle_apply_modification_model
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.output_parsers import StrOutputParser
-from app.schemas.agent import IntentClassification, AppointmentDetails, RescheduleIntent, AppointmentReschedulingDetails
-from datetime import datetime
-from zoneinfo import ZoneInfo
+import ast
 import json
-from app.utils.date_utils import resolve_weekday, resolve_relative_term, resolve_explicit, get_today
+import logging
+from datetime import datetime
+from typing import Literal
+from zoneinfo import ZoneInfo
+
+from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from sqlmodel import Session, select
+
+from app.agent.chat_model import (
+    get_collect_appointment_details_model,
+    get_collect_modification_details_model,
+    get_collect_reschedule_intent_model,
+    get_handle_apply_modification_model,
+    get_handle_appointment_booking_model,
+    get_handle_appointment_lookup_model,
+    get_handle_retreive_faqs_model,
+    get_intent_classification_model,
+)
+from app.agent.state import AgentState
+from app.agent.tools import (
+    book_appointment,
+    check_available_appointment_slots,
+    get_appointments_by_email,
+    modify_appointment,
+    retreive_faqs,
+)
 from app.core.database import engine
 from app.models.domain import Service
-from sqlmodel import Session, select
-import ast
+from app.schemas.agent import (
+    AppointmentDetails,
+    AppointmentReschedulingDetails,
+    IntentClassification,
+    RescheduleIntent,
+)
+from app.utils.date_utils import (
+    get_today,
+    resolve_explicit,
+    resolve_relative_term,
+    resolve_weekday,
+)
+
+logger = logging.getLogger(__name__)
+
 
 def get_valid_service_names() -> list[str]:
     with Session(engine) as session:
         services = session.exec(select(Service)).all()
     return [s.name for s in services]
+
 
 def _modification_complete(modification: dict) -> bool:
     has_id = modification.get("appointment_id") is not None
@@ -32,13 +63,12 @@ def _modification_complete(modification: dict) -> bool:
         not modification.get("new_appointment_date")
         or modification.get("date_confirmed") is True
     )
-    # If they're moving to a new date, a new time must accompany it —
-    # otherwise we don't actually have enough to apply the change.
     time_ok = (
         not modification.get("new_appointment_date")
         or modification.get("new_appointment_time")
     )
     return has_id and has_change and date_ok and time_ok
+
 
 def classify_intent(state: AgentState) -> dict:
     chat_model = get_intent_classification_model()
@@ -48,8 +78,7 @@ def classify_intent(state: AgentState) -> dict:
 
     current_booking = state.get("appointment_details", {})
     current_reschedule = state.get("reschedule_details", {})
-    
-    # --- THE FIX: Separate the active states so the LLM knows exactly which flow is active ---
+
     is_new_booking_active = bool(current_booking)
     is_reschedule_active = bool(current_reschedule)
 
@@ -60,7 +89,6 @@ def classify_intent(state: AgentState) -> dict:
         if hasattr(m, "content") and m.content
     ])
 
-    # --- THE FIX: Updated, hyper-strict routing rules ---
     system_prompt = """
     You are an intent routing classifier for a Med Spa AI.
     Analyze the user's latest request and classify their primary intent.
@@ -94,52 +122,47 @@ def classify_intent(state: AgentState) -> dict:
         "recent_context": recent_context_str,
         "latest_human_message": latest_human_message,
     })
-    
+
     response_intent = response.model_dump()
     state_updates = {"intent": response_intent}
 
-    # Wipe competing flow data when switching contexts
     if response_intent["user_intent"] == "appointment":
         state_updates["reschedule_details"] = {}
         state_updates["modification_details"] = {}
-        
     elif response_intent["user_intent"] == "appointment_reschedule":
         state_updates["appointment_details"] = {}
 
-    print(f"IntentClassification: {response_intent}")
+    logger.info("Classified Intent: %s", response_intent)
     return state_updates
 
-def route_intent(state: AgentState) -> Literal["handle_retreive_faqs", "collect_appointment_details", "collect_reschedule_intent", "collect_modification_details", "handle_apply_modification", "handle_human_escalation"]:
+
+def route_intent(state: AgentState) -> Literal[
+    "handle_retreive_faqs",
+    "collect_appointment_details",
+    "collect_reschedule_intent",
+    "collect_modification_details",
+    "handle_apply_modification",
+    "handle_human_escalation"
+]:
     intent = state["intent"]["user_intent"]
 
     if intent == "faq":
         return "handle_retreive_faqs"
-
     elif intent == "appointment":
         return "collect_appointment_details"
-
     elif intent == "appointment_reschedule":
         reschedule = state.get("reschedule_details", {})
         modification = state.get("modification_details", {})
 
-        # Phase 1: no email yet — go collect it
         if not reschedule.get("user_email"):
             return "collect_reschedule_intent"
-
-        # Phase 2: have email but haven't shown the appointment list yet
         if not reschedule.get("lookup_done"):
-            return "collect_reschedule_intent"  # routes onward to handle_appointment_lookup
-
-        # Phase 3: list was shown, collecting what the user wants to change
+            return "collect_reschedule_intent"
         if not _modification_complete(modification):
             return "collect_modification_details"
-
-        # Phase 4: everything collected — apply the change
         return "handle_apply_modification"
-
     elif intent == "human_escalation":
         return "handle_human_escalation"
-
     else:
         return "handle_retreive_faqs"
 
@@ -148,34 +171,48 @@ def handle_retreive_faqs(state: AgentState) -> dict:
     human_messages = [msg for msg in state["messages"] if isinstance(msg, HumanMessage)]
     query = human_messages[-1].content
     retrieved_faqs = retreive_faqs(query)
-    print(f"retrieved_faqs inside handle_retreive_faqs: {retrieved_faqs}")
+    logger.debug("Retrieved FAQs: %s", retrieved_faqs)
+
     chat_model = get_handle_retreive_faqs_model()
     prompt = ChatPromptTemplate.from_messages([
-        ('system', 'You are a helpful assistant that can answer questions about the following FAQs: {retrieved_faqs}. Always use the information from the FAQs to answer the question. If the you dont know the answer based on the FAQs, just politely say hmmm... let me connect you with a human agent.'),
-        ('human', '{query}')
+        (
+            "system",
+            """You are Nova ✨, the warm, knowledgeable, and elegant AI concierge for Nova Wellness & Aesthetics.
+
+            Your goal is to answer guest inquiries with clarity, warmth, and a touch of luxury.
+
+            ### GUIDELINES:
+            1. **Tone & Style:** Friendly, professional, empathetic, and conversational. Use subtle sparkle emojis (✨, 💫, 🌸) where appropriate to maintain an inviting, high-end spa aesthetic.
+            2. **Fact Grounding:** Base your answers strictly on the provided FAQ context:
+            ---
+            {retrieved_faqs}
+            ---
+            3. **Format for Readability:** Use concise paragraphs or clear bullet points for durations, pricing, and prep instructions. Keep answers punchy and easy to scan.
+            4. **Fallback:** If the answer cannot be determined from the provided FAQs, do not guess or fabricate information. Politely say:
+            "Hmm... let me connect you with one of our human specialists to get you the exact details! 🌸"
+            """
+        ),
+        ("human", "{query}")
     ])
     chain = prompt | chat_model | StrOutputParser()
     faq_response = chain.invoke({"retrieved_faqs": retrieved_faqs, "query": query})
-    current_booking = state.get('appointment_details', {})
-    service = current_booking.get('service_name', 'your appointment')
-    if current_booking:
-        is_booking_active = True
-    else:
-        is_booking_active = False
-    if is_booking_active:
-        handle_in_progress_appointment_prompt =f"""
+
+    current_booking = state.get("appointment_details", {})
+    service = current_booking.get("service_name", "your appointment")
+
+    if bool(current_booking):
+        handle_in_progress_prompt = f"""
             The user just asked an off-topic question. You have already generated this answer: "{faq_response}".
             Now, look at their current partial booking data: {json.dumps(current_booking, indent=2)}.
             Write a single closing sentence that smoothly transitions back and asks if they would like to 
             proceed with finishing their booking for {service}.
             """
-        handle_in_progress_appointment_response = chat_model.invoke(handle_in_progress_appointment_prompt).content
-        final_response = f"{faq_response}\n\n{handle_in_progress_appointment_response}"
+        in_progress_response = chat_model.invoke(handle_in_progress_prompt).content
+        final_response = f"{faq_response}\n\n{in_progress_response}"
     else:
         final_response = faq_response
+
     return {"messages": [AIMessage(content=final_response)]}
-
-
 
 
 def collect_appointment_details(state: AgentState) -> dict:
@@ -184,7 +221,7 @@ def collect_appointment_details(state: AgentState) -> dict:
     today = get_today()
     human_messages = [msg for msg in state["messages"] if isinstance(msg, HumanMessage)]
     latest_human_message = human_messages[-1].content
-    appointment_details = state.get('appointment_details', {})
+    appointment_details = state.get("appointment_details", {})
 
     prompt = f"""
     You are a data extraction assistant. Extract booking details from the user's message.
@@ -226,20 +263,24 @@ def collect_appointment_details(state: AgentState) -> dict:
         except ValueError:
             response["appointment_date"] = appointment_details.get("appointment_date")
     else:
-        # nothing new said about date this turn — keep whatever was already there
         response["appointment_date"] = appointment_details.get("appointment_date")
         response["date_confirmed"] = appointment_details.get("date_confirmed", False)
 
-    print(f"🚨 EXTRACTED DETAILS: {json.dumps(response, indent=2, default=str)}")
+    logger.debug("Extracted Appointment Details: %s", response)
     return {"appointment_details": response}
 
-def route_after_collecting_details(state: AgentState) -> Literal["ask_date_confirmation", "ask_for_missing_fields", "handle_appointment_booking"]:
+
+def route_after_collecting_details(state: AgentState) -> Literal[
+    "ask_date_confirmation",
+    "ask_for_missing_field",
+    "handle_appointment_booking"
+]:
     details = state.get("appointment_details", {})
     if details.get("appointment_date") and not details.get("date_confirmed", False):
         return "ask_date_confirmation"
     required_fields = ["appointment_date", "appointment_time", "service_name", "user_name", "user_email"]
     missing_fields = [field for field in required_fields if not details.get(field)]
-    blocking_fields = [field for field in missing_fields if field!="appointment_time"]
+    blocking_fields = [field for field in missing_fields if field != "appointment_time"]
     if blocking_fields:
         return "ask_for_missing_field"
     return "handle_appointment_booking"
@@ -255,27 +296,24 @@ def ask_date_confirmation(state: AgentState) -> dict:
     )
     return {"messages": [AIMessage(content=question)]}
 
+
 def ask_for_missing_field(state: AgentState) -> dict:
     details = state.get("appointment_details", {})
-
     field_prompts = {
         "user_name": "Could you please tell me your full name?",
         "user_email": "Could you also share your email address so I can confirm your booking?",
         "service_name": "Which service would you like to book?",
         "appointment_date": "What date would you like to come in?",
     }
-
     required_fields = ["service_name", "appointment_date", "user_name", "user_email"]
     missing_fields = [field for field in required_fields if not details.get(field)]
-
     question = field_prompts.get(missing_fields[0], "Could you provide a bit more detail so I can finish booking this?")
-
     return {"messages": [AIMessage(content=question)]}
+
 
 def handle_appointment_booking(state: AgentState) -> dict:
     chat_model = get_handle_appointment_booking_model()
-
-    current_appointment_details = state.get('appointment_details', {})
+    current_appointment_details = state.get("appointment_details", {})
     required_fields = ["appointment_date", "appointment_time", "service_name", "user_name", "user_email"]
     has_all_required = all(current_appointment_details.get(field) for field in required_fields)
 
@@ -300,7 +338,7 @@ def handle_appointment_booking(state: AgentState) -> dict:
     """
 
     chat_model_with_tools = chat_model.bind_tools(tools_to_bind)
-    recent_user_context = state.get('messages', [])[-4:]
+    recent_user_context = state.get("messages", [])[-4:]
     current_time = datetime.now(ZoneInfo("Asia/Karachi")).strftime("%A, %B %d, %Y")
 
     system_prompt = """
@@ -319,16 +357,14 @@ def handle_appointment_booking(state: AgentState) -> dict:
     - If status is "fully_booked": inform the user that date is unavailable, then
         immediately present the nearest_alternatives (each with its date and slots)
         in the same reply so the user can choose a different day without any back-and-forth.
-        Example: "Friday the 3rd is fully booked — but here are the nearest available days: ..."
 
     2. If `user_name` is missing, ask for it conversationally. Do not guess or invent it.
     """ + booking_instruction
 
     prompt = ChatPromptTemplate.from_messages([
-        ('system', system_prompt),
+        ("system", system_prompt),
         MessagesPlaceholder(variable_name="recent_user_context"),
     ])
-
     chain = prompt | chat_model_with_tools
 
     try:
@@ -338,12 +374,9 @@ def handle_appointment_booking(state: AgentState) -> dict:
             "current_appointment_details": json.dumps(current_appointment_details, indent=2)
         })
     except Exception as e:
-        # Groq occasionally hallucinates a tool call for a tool that wasn't bound
-        # (tool_use_failed / "not in request.tools"). Fall back to a plain,
-        # non-tool-bound response instead of letting this 503 the whole endpoint.
         error_str = str(e)
         if "tool_use_failed" in error_str or "was not in request.tools" in error_str:
-            print(f"⚠️ Tool call hallucination caught in handle_appointment_booking: {error_str}")
+            logger.warning("Tool call hallucination in handle_appointment_booking: %s", error_str)
             fallback_chain = prompt | chat_model | StrOutputParser()
             fallback_text = fallback_chain.invoke({
                 "recent_user_context": recent_user_context,
@@ -352,7 +385,7 @@ def handle_appointment_booking(state: AgentState) -> dict:
             })
             return {"messages": [AIMessage(content=fallback_text)]}
         raise
-   
+
     if recent_user_context and isinstance(recent_user_context[-1], ToolMessage) and recent_user_context[-1].name == "book_appointment":
         if "successfully booked" in recent_user_context[-1].content.lower():
             return {
@@ -360,6 +393,7 @@ def handle_appointment_booking(state: AgentState) -> dict:
                 "appointment_details": {}
             }
     return {"messages": [response]}
+
 
 def collect_reschedule_intent(state: AgentState) -> dict:
     chat_model = get_collect_reschedule_intent_model()
@@ -381,14 +415,17 @@ def collect_reschedule_intent(state: AgentState) -> dict:
 
     return {"reschedule_details": merged}
 
-def route_after_collecting_reschedule_intent(state: AgentState) -> Literal["ask_for_email","handle_appointment_lookup"]:
+
+def route_after_collecting_reschedule_intent(state: AgentState) -> Literal["ask_for_email", "handle_appointment_lookup"]:
     details = state.get("reschedule_details", {})
     if not details.get("user_email"):
         return "ask_for_email"
     return "handle_appointment_lookup"
 
+
 def ask_for_email(state: AgentState) -> dict:
-    return {"messages": [AIMessage(content="Sure, I can help you with that. Can i get your email address?")]}
+    return {"messages": [AIMessage(content="Sure, I can help you with that. Could you please share your email address?")]}
+
 
 def handle_appointment_lookup(state: AgentState) -> dict:
     chat_model = get_handle_appointment_lookup_model()
@@ -397,27 +434,24 @@ def handle_appointment_lookup(state: AgentState) -> dict:
     user_email = rescheduling_details.get("user_email")
     recent_user_context = state.get("messages", [])[-6:]
 
-    # Pass 1 vs Pass 2 detection
     has_tool_result = False
     tool_status = None
-    
+
     for m in recent_user_context:
         if isinstance(m, ToolMessage) and (m.name or "") == "get_appointments_by_email":
             has_tool_result = True
-            
-            # --- ROBUST PARSING LOGIC ---
             try:
                 data = json.loads(m.content)
             except json.JSONDecodeError:
                 try:
                     data = ast.literal_eval(m.content)
                 except Exception as e:
-                    print(f"Error parsing tool message in lookup: {e}")
+                    logger.warning("Error parsing tool message with ast: %s", e)
                     data = {}
             except Exception as e:
-                print(f"Unexpected error parsing tool message: {e}")
+                logger.error("Unexpected error parsing tool message: %s", e)
                 data = {}
-                
+
             tool_status = data.get("status")
             break
 
@@ -446,22 +480,19 @@ def handle_appointment_lookup(state: AgentState) -> dict:
         "user_email": user_email,
     })
 
-    # --- THE STATE ROUTING FIX ---
     if has_tool_result:
         if tool_status in ["not_found", "no_appointments"]:
-            # Wipe the state completely to force the router to ask for email again
             updated_reschedule = {"user_email": None, "lookup_done": False}
         else:
-            # Success! Mark lookup as done
             updated_reschedule = {**rescheduling_details, "lookup_done": True}
     else:
-        # Tool hasn't run yet, preserve state
         updated_reschedule = {**rescheduling_details}
 
     return {
         "messages": [response],
         "reschedule_details": updated_reschedule,
     }
+
 
 def collect_modification_details(state: AgentState) -> dict:
     chat_model = get_collect_modification_details_model()
@@ -473,7 +504,6 @@ def collect_modification_details(state: AgentState) -> dict:
     existing = state.get("modification_details", {})
     valid_services = get_valid_service_names()
 
-    # Pull appointment list from tool message history
     existing_appointments = []
     for msg in reversed(state["messages"]):
         if isinstance(msg, ToolMessage) and (msg.name or "") == "get_appointments_by_email":
@@ -483,13 +513,12 @@ def collect_modification_details(state: AgentState) -> dict:
                 try:
                     data = ast.literal_eval(msg.content)
                 except Exception as e:
-                    print(f"Error parsing tool message: {e}")
+                    logger.warning("Error parsing tool message in modification: %s", e)
                     data = {}
             if data.get("status") == "found":
                 existing_appointments = data.get("appointments", [])
             break
 
-    # Build weekday lookup for the identification guard
     appointments_by_weekday = {}
     for appt in existing_appointments:
         try:
@@ -544,33 +573,23 @@ def collect_modification_details(state: AgentState) -> dict:
     qualifier = extracted.get("date_qualifier") or "none"
     date_confirmed_raw = extracted.get("date_confirmed", "false")
 
-    # THE FIXED GUARD
-    # Old logic: block date change if weekday matches any existing appointment.
-    # New logic: only block if weekday matches AND there's no qualifier indicating
-    # the user wants to move (next/this always means moving, never identifying).
-    # Also check the raw message for directional verbs as a secondary signal.
     directional_verbs = ["move to", "reschedule to", "change to", "switch to", "shift to"]
     message_lower = latest_human_message.lower()
     has_directional_verb = any(verb in message_lower for verb in directional_verbs)
 
     is_identifying_not_moving = (
         expr_type == "weekday"
-        and expr_value in appointments_by_weekday   # weekday matches an existing appointment
-        and qualifier == "none"                      # no "next" or "this" qualifier
-        and not has_directional_verb                 # no "move to / reschedule to" in message
+        and expr_value in appointments_by_weekday
+        and qualifier == "none"
+        and not has_directional_verb
     )
 
     if is_identifying_not_moving:
-        # User is pointing at an existing appointment by its day, not moving it.
-        # Extract the appointment_id from the matching appointment if not already known.
         if not merged.get("appointment_id"):
             matched_appt = appointments_by_weekday[expr_value]
             merged["appointment_id"] = matched_appt.get("appointment_id")
-        # Do not touch new_appointment_date
         merged["date_confirmed"] = existing.get("date_confirmed", False)
-
     else:
-        # Normal date resolution
         if expr_type == "weekday" and expr_value:
             resolved = resolve_weekday(
                 expr_value, today,
@@ -579,12 +598,10 @@ def collect_modification_details(state: AgentState) -> dict:
             merged["new_appointment_date"] = resolved.date_str
             merged["date_confirmed"] = not resolved.needs_confirmation
             merged["_pending_confirmation_question"] = resolved.confirmation_question
-
         elif expr_type == "relative" and expr_value:
             resolved = resolve_relative_term(expr_value, today)
             merged["new_appointment_date"] = resolved.date_str
             merged["date_confirmed"] = True
-
         elif expr_type == "explicit" and expr_value:
             try:
                 resolved = resolve_explicit(expr_value, today)
@@ -592,21 +609,21 @@ def collect_modification_details(state: AgentState) -> dict:
                 merged["date_confirmed"] = True
             except ValueError:
                 pass
-
         elif str(date_confirmed_raw).lower() == "true":
             merged["date_confirmed"] = True
-
         else:
             merged["date_confirmed"] = existing.get("date_confirmed", False)
 
-    print(f"🔧 MODIFICATION DETAILS: {json.dumps(merged, indent=2, default=str)}")
+    logger.debug("Extracted Modification Details: %s", merged)
     return {"modification_details": merged}
+
 
 def route_after_collecting_modification(state: AgentState) -> Literal["ask_date_confirmation", "handle_apply_modification"]:
     details = state.get("modification_details", {})
     if details.get("new_appointment_date") and not details.get("date_confirmed", False):
-        return "ask_date_confirmation"   # reuse the same node — it reads _pending_confirmation_question
+        return "ask_date_confirmation"
     return "handle_apply_modification"
+
 
 def handle_apply_modification(state: AgentState) -> dict:
     chat_model = get_handle_apply_modification_model()
@@ -616,20 +633,14 @@ def handle_apply_modification(state: AgentState) -> dict:
     has_new_date = bool(modification.get("new_appointment_date"))
     has_new_time = bool(modification.get("new_appointment_time"))
     has_new_service = bool(modification.get("new_service_name"))
-
     has_something_to_change = has_new_date or has_new_time or has_new_service
 
-    # --- THE STRICT GUARD ---
     is_ready_to_modify = False
     if has_appointment_id and has_something_to_change:
         is_ready_to_modify = True
-
-        # If they are moving to a new date, they MUST specify a new time
-        # before the AI is allowed to touch the database.
         if has_new_date and not has_new_time:
             is_ready_to_modify = False
 
-    # Bind tools based on readiness
     if is_ready_to_modify:
         tools_to_bind = [check_available_appointment_slots, modify_appointment]
         modify_instruction = """
@@ -641,7 +652,6 @@ def handle_apply_modification(state: AgentState) -> dict:
     """
     else:
         tools_to_bind = [check_available_appointment_slots]
-
         if not has_appointment_id:
             missing_reason = "the appointment_id is missing — ask the user which appointment they mean."
         elif has_new_date and not has_new_time:
@@ -682,7 +692,6 @@ def handle_apply_modification(state: AgentState) -> dict:
         ("system", system_prompt),
         MessagesPlaceholder(variable_name="recent_context"),
     ])
-
     chain = prompt | chat_model_with_tools
 
     try:
@@ -693,7 +702,7 @@ def handle_apply_modification(state: AgentState) -> dict:
     except Exception as e:
         error_str = str(e)
         if "tool_use_failed" in error_str or "was not in request.tools" in error_str:
-            print(f"⚠️ Tool call hallucination caught in handle_apply_modification: {error_str}")
+            logger.warning("Tool call hallucination in handle_apply_modification: %s", error_str)
             fallback_chain = prompt | chat_model | StrOutputParser()
             fallback_text = fallback_chain.invoke({
                 "recent_context": recent_context,
@@ -701,9 +710,9 @@ def handle_apply_modification(state: AgentState) -> dict:
             })
             return {"messages": [AIMessage(content=fallback_text)]}
         raise
+
     if recent_context and isinstance(recent_context[-1], ToolMessage) and recent_context[-1].name == "modify_appointment":
         if "success" in recent_context[-1].content.lower():
-
             return {
                 "messages": [response],
                 "reschedule_details": {},

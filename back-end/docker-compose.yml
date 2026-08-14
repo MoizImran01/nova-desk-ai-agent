@@ -40,22 +40,5 @@ services:
       postgres:
         condition: service_healthy
 
-  # --------------------------------------------------------
-  # ChromaDB: The Vector Database
-  # Stores embeddings for Med Spa FAQs and Policies (RAG)
-  # --------------------------------------------------------
-  chromadb:
-    image: chromadb/chroma:latest
-    container_name: nova_chromadb
-    restart: always
-    ports:
-      - "8000:8000"
-    volumes:
-      - chromadb_data:/chroma/chroma
-    environment:
-      - IS_PERSISTENT=TRUE
-      - PERSIST_DIRECTORY=/chroma/chroma
-
 volumes:
   postgres_data:
-  chromadb_data:

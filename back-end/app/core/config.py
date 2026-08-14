@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     GROQ_API_KEY: str
     GOOGLE_GEMINI_API_KEY: str
+    PINECONE_API_KEY: str
 
     # This tells Pydantic to read variables from the .env file
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
