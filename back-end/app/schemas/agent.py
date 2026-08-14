@@ -2,7 +2,7 @@ from calendar import c
 from pydantic import BaseModel, Field
 from typing import Literal, Optional
 class IntentClassification(BaseModel):
-    user_intent: Literal["faq", "appointment",  "appointment_reschedule", "human_escalation"] = Field(description="The primary intent of the user's latest message")
+    user_intent: Literal["faq", "appointment", "appointment_reschedule", "human_escalation", "out_of_scope"] = Field(description="The primary intent of the user's latest message")
     confidence_score: str = Field(description="A score from 0.0 to 1.0 indicating how confident you are in this intent classification")
 
 class AppointmentDetails(BaseModel):

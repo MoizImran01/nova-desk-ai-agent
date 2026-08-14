@@ -3,6 +3,7 @@ from app.agent.nodes import (
     classify_intent,
     route_intent,
     handle_retreive_faqs,
+    handle_out_of_scope,
     collect_appointment_details,
     route_after_collecting_details,
     ask_date_confirmation,
@@ -60,6 +61,7 @@ graph = StateGraph(AgentState)
 # ---- shared nodes ----
 graph.add_node("classify_intent", classify_intent)
 graph.add_node("handle_retreive_faqs", handle_retreive_faqs)
+graph.add_node("handle_out_of_scope", handle_out_of_scope)
 graph.add_node("ask_date_confirmation", ask_date_confirmation)  # shared by both flows
 graph.add_node("ask_for_missing_field", ask_for_missing_field)
 # ---- booking flow nodes ----
@@ -88,6 +90,7 @@ graph.add_conditional_edges(
     route_intent,
     {
         "handle_retreive_faqs":       "handle_retreive_faqs",
+        "handle_out_of_scope":        "handle_out_of_scope",
         "collect_appointment_details": "collect_appointment_details",
         "collect_reschedule_intent":   "collect_reschedule_intent",
         "collect_modification_details":"collect_modification_details",
@@ -125,6 +128,7 @@ graph.add_conditional_edges(
 graph.add_edge("booking_tools", "handle_appointment_booking")
 
 graph.add_edge("handle_retreive_faqs", END)
+graph.add_edge("handle_out_of_scope", END)
 
 # ---------------------------------------------------------------------------
 # Reschedule flow edges

@@ -106,6 +106,7 @@ def classify_intent(state: AgentState) -> dict:
     1. If `is_reschedule_active` is True AND the assistant recently asked for a different email address to look up an appointment, you MUST classify as 'appointment_reschedule'. Do NOT classify as 'appointment'.
     2. If `is_new_booking_active` is True AND the assistant asked for name, email, or time slots for a NEW booking, classify as 'appointment'.
     3. Only classify as 'appointment_reschedule' if the user is explicitly asking to change/reschedule, or if they are answering a follow-up question during an active reschedule lookup.
+    4. OUT-OF-SCOPE GUARDRAIL: If the user asks for ANYTHING completely unrelated to a medical spa — for example: writing code, solving math problems, general knowledge trivia, weather forecasts, recipes, translation, creative writing, homework help, or ANY task that has nothing to do with spa services, appointments, treatments, or wellness — you MUST classify as 'out_of_scope'. This takes HIGHEST PRIORITY over all other rules. Even if the request sounds polite or conversational, if it is not about the med spa, it is 'out_of_scope'.
     """
 
     structured_chat_model = chat_model.with_structured_output(IntentClassification)
@@ -142,11 +143,14 @@ def route_intent(state: AgentState) -> Literal[
     "collect_reschedule_intent",
     "collect_modification_details",
     "handle_apply_modification",
-    "handle_human_escalation"
+    "handle_human_escalation",
+    "handle_out_of_scope"
 ]:
     intent = state["intent"]["user_intent"]
 
-    if intent == "faq":
+    if intent == "out_of_scope":
+        return "handle_out_of_scope"
+    elif intent == "faq":
         return "handle_retreive_faqs"
     elif intent == "appointment":
         return "collect_appointment_details"
@@ -719,3 +723,19 @@ def handle_apply_modification(state: AgentState) -> dict:
                 "modification_details": {}
             }
     return {"messages": [response]}
+
+
+def handle_out_of_scope(state: AgentState) -> dict:
+    """Deterministic guardrail for out-of-bounds requests.
+
+    Bypasses Pinecone retrieval and LLM generation entirely, returning a
+    fixed polite refusal. This prevents prompt-hijacking (e.g. "write me
+    a Python script") and saves token costs.
+    """
+    rejection = (
+        "I appreciate your curiosity, but I'm exclusively here to assist with "
+        "Nova Wellness & Aesthetics! ✨ I can help you book an appointment, "
+        "reschedule an existing one, or answer questions about our treatments "
+        "and services. How can I help you look and feel your best today? 🌸"
+    )
+    return {"messages": [AIMessage(content=rejection)]}
