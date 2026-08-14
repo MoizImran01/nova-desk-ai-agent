@@ -100,7 +100,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 28px;
+  padding: calc(env(safe-area-inset-top, 0px) + 12px) 28px 12px;
   background: var(--bg-main);
   border-bottom: 1px solid var(--accent-border);
   flex-shrink: 0;
@@ -916,7 +916,7 @@ body {
 
 @media (max-width: 600px) {
   .app-header {
-    padding: 10px 14px;
+    padding: calc(env(safe-area-inset-top, 0px) + 10px) 14px 10px;
   }
 
   .header-left {
@@ -924,8 +924,8 @@ body {
   }
 
   .header-logo {
-    height: 48px;
-    width: 48px;
+    height: 80px;
+    width: 80px;
   }
 
   .header-brand {
@@ -965,8 +965,8 @@ body {
   }
 
   .welcome-logo {
-    width: 100px;
-    height: 100px;
+    width: 160px;
+    height: 160px;
   }
 
   .chat-input-area {
