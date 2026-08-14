@@ -41,7 +41,9 @@ app = FastAPI(
 origins = [
     "http://localhost:5173",  # React/Vite default port
     "http://127.0.0.1:5173",
-    "*"                       # Allow all for widget embedding
+    "*",                      # Allow all for widget embedding
+    "https://nova-desk-ai-agent.vercel.app",
+    "https://nova-desk-ai-agent-git-main-moiz-imrans-projects-80fe3802.vercel.app",
 ]
 
 app.add_middleware(
