@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import logo from '../assets/logo.png';
-
+import ai_chat_bubble from '../assets/ai-chat-bubble-img.png';
 /**
  * ChatPanel — The user-facing luxury chat interface.
  * Renders message history with markdown support, soft reveal replies,
@@ -56,7 +56,7 @@ function ChatPanel({ messages, isLoading, input, setInput, onSend }) {
               <div key={i} className={`message-row ${msg.role}`}>
                 {msg.role === 'assistant' ? (
                   <div className="assistant-wrapper">
-                    <img src={logo} alt="Nova" className="ai-avatar" />
+                    <img src={ai_chat_bubble} alt="Nova" className="ai-avatar" />
                     <div>
                       <div className="message-bubble assistant soft-reveal">
                         <ReactMarkdown>{msg.content}</ReactMarkdown>
