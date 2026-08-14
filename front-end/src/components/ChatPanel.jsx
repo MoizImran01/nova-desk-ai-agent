@@ -76,7 +76,7 @@ function ChatPanel({ messages, isLoading, input, setInput, onSend }) {
         {/* Typing Indicator */}
         {isLoading && (
           <div className="typing-indicator">
-            <img src={logo} alt="Nova" className="ai-avatar" />
+            <img src={ai_chat_bubble} alt="Nova" className="ai-avatar" />
             <div className="typing-bubble">
               <div className="typing-dots">
                 <span></span>
