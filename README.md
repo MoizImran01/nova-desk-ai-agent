@@ -243,7 +243,7 @@ back-end/
 ---
 ---
 
-# 2. 💻 Frontend Interface Dashboard (`front-end/`)
+## 2.  Frontend Dashboard (`front-end/`)
 
 A luxury, clean visual interface for clients to chat with **Nova** and developers to inspect the state machine in real-time. Deployed on [Vercel](https://nova-desk-ai-agent.vercel.app).
 
