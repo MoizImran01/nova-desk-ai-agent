@@ -70,6 +70,20 @@ def _modification_complete(modification: dict) -> bool:
     return has_id and has_change and date_ok and time_ok
 
 
+def _add_weekday_display(details: dict, date_key: str) -> dict:
+    """Return a copy of *details* with a human-readable '{date_key}_display'
+    field so the LLM never has to compute the day of the week itself."""
+    enriched = {**details}
+    date_str = details.get(date_key)
+    if date_str:
+        try:
+            parsed = datetime.strptime(date_str, "%Y-%m-%d").date()
+            enriched[f"{date_key}_display"] = parsed.strftime("%A, %B %d, %Y")
+        except (ValueError, TypeError):
+            pass
+    return enriched
+
+
 def classify_intent(state: AgentState) -> dict:
     chat_model = get_intent_classification_model()
 
@@ -324,6 +338,7 @@ def ask_for_missing_field(state: AgentState) -> dict:
 def handle_appointment_booking(state: AgentState) -> dict:
     chat_model = get_handle_appointment_booking_model()
     current_appointment_details = state.get("appointment_details", {})
+    current_appointment_details = _add_weekday_display(current_appointment_details, "appointment_date")
     required_fields = ["appointment_date", "appointment_time", "service_name", "user_name", "user_email"]
     has_all_required = all(current_appointment_details.get(field) for field in required_fields)
 
@@ -357,6 +372,10 @@ def handle_appointment_booking(state: AgentState) -> dict:
 
     Details collected so far:
     {current_appointment_details}
+
+    CRITICAL: When mentioning any date to the user, ALWAYS use the
+    `appointment_date_display` value (e.g. "Wednesday, September 02, 2026").
+    NEVER calculate or guess the day of the week yourself.
 
     INSTRUCTIONS:
     1. If `appointment_date` is set but `appointment_time` is null, call
@@ -443,6 +462,7 @@ def handle_appointment_lookup(state: AgentState) -> dict:
     rescheduling_details = state.get("reschedule_details", {})
     user_email = rescheduling_details.get("user_email")
     recent_user_context = state.get("messages", [])[-6:]
+    current_date = datetime.now(ZoneInfo("Asia/Karachi")).strftime("%A, %B %d, %Y")
 
     has_tool_result = False
     tool_status = None
@@ -469,10 +489,12 @@ def handle_appointment_lookup(state: AgentState) -> dict:
     You are the appointment modification assistant.
     The user wants to modify an existing appointment.
     Their email is: {user_email}
+    Today's exact date is: {current_date}.
 
     STEP 1: Call 'get_appointments_by_email' with this email immediately.
 
-    Once you have the result:
+    Once you have the result (IMPORTANT — when presenting appointment dates,
+    derive the correct day of the week from today's date above; NEVER guess the weekday):
     - If status is "not_found" or "no_appointments": Warmly inform the user that you couldn't find any upcoming appointments under that email, and ask if they might have booked under a different email address.
     - If status is "found" and there is ONE appointment: confirm its details and ask
       what they would like to change (date, time, or service).
@@ -488,6 +510,7 @@ def handle_appointment_lookup(state: AgentState) -> dict:
     response = chain.invoke({
         "recent_user_context": recent_user_context,
         "user_email": user_email,
+        "current_date": current_date,
     })
 
     if has_tool_result:
@@ -655,6 +678,7 @@ def route_after_collecting_modification(state: AgentState) -> Literal["ask_date_
 def handle_apply_modification(state: AgentState) -> dict:
     chat_model = get_handle_apply_modification_model()
     modification = state.get("modification_details", {})
+    modification = _add_weekday_display(modification, "new_appointment_date")
 
     has_appointment_id = modification.get("appointment_id") is not None
     has_new_date = bool(modification.get("new_appointment_date"))
@@ -706,6 +730,10 @@ def handle_apply_modification(state: AgentState) -> dict:
     system_prompt = """
     You are the appointment modification assistant.
     Modification details collected so far: {modification_details}
+
+    CRITICAL: When mentioning any date to the user, ALWAYS use the
+    `new_appointment_date_display` value (e.g. "Wednesday, September 02, 2026").
+    NEVER calculate or guess the day of the week yourself.
 
     INSTRUCTIONS:
     1. If the user wants a new date but new_appointment_time is missing,

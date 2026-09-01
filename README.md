@@ -175,7 +175,7 @@ graph TD
 * **State & Transactional DB (PostgreSQL)**: Hosted serverless on [Neon Tech](https://neon.tech/) (AWS `us-east-2`), utilizing connection poolers for high scalability.
 * **Vector Database (RAG)**: Hosted on [Pinecone Serverless](https://www.pinecone.io/) using `cosine` similarity to store and query highly optimized embeddings.
 * **Large Language Models (LLMs)**:
-  * **Groq API**: High-speed LLaMA models for primary intent classification and text generation.
+  * **Groq API**: High-speed GPT-OSS models (`openai/gpt-oss-120b`, `openai/gpt-oss-20b`) for primary intent classification, high-accuracy tool calling, and text generation.
   * **Google Gemini API**: Utilizing `text-embedding-004` to generate 768-dimensional document vectors, alongside large-context models for complex date-math parsing.
 * **Application API**: Deployed live on Render.
 
