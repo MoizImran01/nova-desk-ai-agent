@@ -52,7 +52,7 @@ async def chat(request: ChatRequest, db: Session = Depends(get_db)):
         start_time = time.time()
         response = workflow.invoke({"messages": lang_chain_messages}, config=config)
         latency_ms = int((time.time() - start_time) * 1000)
-    except Exception:
+    except Exception as e:
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=503, detail="The AI service is currently unavailable. Please try again in a moment.")

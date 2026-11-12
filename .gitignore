@@ -11,15 +11,3 @@ back-end/.env
 front-end/node_modules/
 front-end/dist/
 front-end/.env
-
-# Agentic Coding Workflow
-.scratch/
-
-# AI Agent Workflow Files
-.agents/
-AGENTS.md
-CLAUDE.md
-opencode.jsonc
-skills-lock.json
-GLOSSARY.md
-docs/agents/
