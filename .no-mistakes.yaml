@@ -1,0 +1,11 @@
+# .no-mistakes.yaml repository configuration
+#
+# The same substantive checks run in GitHub Actions (.github/workflows/ci.yml).
+# `test` needs PostgreSQL and a dedicated Redis; see back-end/tests/conftest.py.
+
+commands:
+  lint: npm --prefix front-end run lint && back-end/scripts/check.sh lint
+  test: npm --prefix front-end run build && back-end/scripts/check.sh test
+
+auto_fix:
+  review: 0

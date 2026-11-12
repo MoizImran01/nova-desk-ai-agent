@@ -1,0 +1,35 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-ra --strict-markers --strict-config"
+markers = [
+    "agent: deterministic agent regression driven through the real route and compiled graph",
+]
+
+[tool.ruff]
+target-version = "py314"
+extend-exclude = ["venv"]
+
+[tool.ruff.lint]
+# Pyflakes plus syntax/runtime errors. Widen as later slices clean up legacy code.
+select = ["E9", "F"]
+# Unused imports in legacy modules (some are side-effect model registrations) are out of scope.
+ignore = ["F401"]
+
+[tool.ruff.format]
+# `ruff format --check` runs only on the paths listed in scripts/check.sh.
+# Legacy app code is not reformatted by this ticket.
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+check_untyped_defs = true
+# Report errors only for the files listed below, not legacy modules they import.
+follow_imports = "silent"
+warn_unused_ignores = true
+# Declared type-check scope. Widen this list as modules are brought under check.
+files = [
+    "app/schemas",
+    "app/utils",
+    "tests",
+]
