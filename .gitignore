@@ -1,13 +1,19 @@
 # General
 .DS_Store
+.env
+.env.*
+!.env.example
+
+# Local review notes
+/architecture-spec.md
+/refactor-backlog.md
+/agent-refactor-plan.md
 
 # Backend
 back-end/venv/
 back-end/__pycache__/
 back-end/**/*.pyc
-back-end/.env
 
 # Frontend
 front-end/node_modules/
 front-end/dist/
-front-end/.env

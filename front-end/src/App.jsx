@@ -17,7 +17,6 @@ function App() {
     intent: { user_intent: 'idle', confidence_score: '0.0' },
     appointment_details: {},
     reschedule_details: {},
-    modification_details: {},
     executed_tools: [],
   });
 
@@ -92,7 +91,6 @@ function App() {
       intent: { user_intent: 'idle', confidence_score: '0.0' },
       appointment_details: {},
       reschedule_details: {},
-      modification_details: {},
       executed_tools: [],
     });
     localStorage.removeItem('conversation_id');

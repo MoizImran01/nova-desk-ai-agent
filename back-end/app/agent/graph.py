@@ -1,221 +1,154 @@
-from langgraph.graph import StateGraph, START, END
+from functools import partial
+import logging
+from typing import Optional
+
+from langgraph.checkpoint.base import BaseCheckpointSaver
+from langgraph.checkpoint.postgres import PostgresSaver
+from langgraph.graph import END, START, StateGraph
+from langgraph.graph.state import CompiledStateGraph
+from psycopg_pool import ConnectionPool
+
+from app.agent.booking import (
+    ask_booking_clarification,
+    collect_appointment_details,
+    handle_appointment_booking,
+    route_after_collecting_details,
+)
 from app.agent.nodes import (
     classify_intent,
-    route_intent,
-    handle_retreive_faqs,
     handle_out_of_scope,
-    collect_appointment_details,
-    route_after_collecting_details,
-    ask_date_confirmation,
-    ask_for_missing_field,
-    handle_appointment_booking,
-    collect_reschedule_intent,
-    route_after_collecting_reschedule_intent,
-    ask_for_email,
-    handle_appointment_lookup,
-    collect_modification_details,
-    route_after_collecting_modification,
+    handle_retreive_faqs,
+    route_intent,
+)
+from app.agent.rescheduling import (
+    ask_reschedule_clarification,
+    collect_reschedule_details,
     handle_apply_modification,
+    route_after_collecting_reschedule,
 )
 from app.agent.state import AgentState
-from langgraph.checkpoint.postgres import PostgresSaver
-from psycopg_pool import ConnectionPool
 from app.core.config import settings
-from langgraph.prebuilt import ToolNode, tools_condition
-from app.agent.tools import (
-    check_available_appointment_slots,
-    book_appointment,
-    get_appointments_by_email,
-    modify_appointment,
-)
-from langchain_core.messages import ToolMessage
-from typing import Literal
-# ---------------------------------------------------------------------------
-# Checkpointer
-# ---------------------------------------------------------------------------
+from app.core.database import create_session
+from app.services.scheduling_service import SchedulingService
 
-pool = ConnectionPool(conninfo=settings.DATABASE_URL, kwargs={"autocommit": True})
-checkpointer = PostgresSaver(pool)
-checkpointer.setup()
+logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# Two separate ToolNodes — one per flow — so each can route back to its own
-# calling node without ambiguity. A single shared ToolNode cannot have two
-# different "return to" edges in LangGraph.
-# ---------------------------------------------------------------------------
-
-booking_tool_node = ToolNode([check_available_appointment_slots, book_appointment])
-
-reschedule_tool_node = ToolNode([
-    get_appointments_by_email,
-    check_available_appointment_slots,
-    modify_appointment,
-])
-
-# ---------------------------------------------------------------------------
-# Graph definition
-# ---------------------------------------------------------------------------
-
-graph = StateGraph(AgentState)
-
-# ---- shared nodes ----
-graph.add_node("classify_intent", classify_intent)
-graph.add_node("handle_retreive_faqs", handle_retreive_faqs)
-graph.add_node("handle_out_of_scope", handle_out_of_scope)
-graph.add_node("ask_date_confirmation", ask_date_confirmation)  # shared by both flows
-graph.add_node("ask_for_missing_field", ask_for_missing_field)
-# ---- booking flow nodes ----
-graph.add_node("collect_appointment_details", collect_appointment_details)
-graph.add_node("handle_appointment_booking", handle_appointment_booking)
-graph.add_node("booking_tools", booking_tool_node)
-
-# ---- reschedule flow nodes ----
-graph.add_node("collect_reschedule_intent", collect_reschedule_intent)
-graph.add_node("ask_for_email", ask_for_email)
-graph.add_node("handle_appointment_lookup", handle_appointment_lookup)
-graph.add_node("collect_modification_details", collect_modification_details)
-graph.add_node("handle_apply_modification", handle_apply_modification)
-graph.add_node("reschedule_tools", reschedule_tool_node)
-
-# ---------------------------------------------------------------------------
-# Edges — entry point
-# ---------------------------------------------------------------------------
-
-graph.add_edge(START, "classify_intent")
-
-# classify_intent → route_intent decides which flow to enter, and which
-# phase within the reschedule flow to resume at.
-graph.add_conditional_edges(
-    "classify_intent",
-    route_intent,
-    {
-        "handle_retreive_faqs":       "handle_retreive_faqs",
-        "handle_out_of_scope":        "handle_out_of_scope",
-        "collect_appointment_details": "collect_appointment_details",
-        "collect_reschedule_intent":   "collect_reschedule_intent",
-        "collect_modification_details":"collect_modification_details",
-        "handle_apply_modification":   "handle_apply_modification",
-    },
-)
-
-# ---------------------------------------------------------------------------
-# Booking flow edges
-# ---------------------------------------------------------------------------
-
-graph.add_conditional_edges(
-    "collect_appointment_details",
-    route_after_collecting_details,
-    {
-        "ask_date_confirmation":    "ask_date_confirmation",
-        "ask_for_missing_field": "ask_for_missing_field",
-        "handle_appointment_booking":"handle_appointment_booking",
-    },
-)
-
-# ask_date_confirmation is shared — both flows end their turn here and wait
-# for the user to confirm which date they meant.
-graph.add_edge("ask_date_confirmation", END)
-graph.add_edge("ask_for_missing_field", END)
-
-graph.add_conditional_edges(
-    "handle_appointment_booking",
-    tools_condition,
-    {
-        "tools": "booking_tools",
-        END: END,
-    },
-)
-graph.add_edge("booking_tools", "handle_appointment_booking")
-
-graph.add_edge("handle_retreive_faqs", END)
-graph.add_edge("handle_out_of_scope", END)
-
-# ---------------------------------------------------------------------------
-# Reschedule flow edges
-# ---------------------------------------------------------------------------
-
-# Phase 1 / 2: collect email → look up appointments
-graph.add_conditional_edges(
-    "collect_reschedule_intent",
-    route_after_collecting_reschedule_intent,
-    {
-        "ask_for_email": "ask_for_email",
-        "handle_appointment_lookup":"handle_appointment_lookup",
-    },
-)
-graph.add_edge("ask_for_email", END)
-
-# handle_appointment_lookup calls get_appointments_by_email via the tool node,
-# then loops back to itself to present the result conversationally.
-graph.add_conditional_edges(
-    "handle_appointment_lookup",
-    tools_condition,
-    {
-        "tools": "reschedule_tools",
-        END: END,
-    },
-)
+_pool: Optional[ConnectionPool] = None
+_workflow: Optional[CompiledStateGraph] = None
 
 
-# Phase 3: collect what to change → confirm date if ambiguous → apply
-graph.add_conditional_edges(
-    "collect_modification_details",
-    route_after_collecting_modification,
-    {
-        "ask_date_confirmation":   "ask_date_confirmation",
-        "handle_apply_modification":"handle_apply_modification",
-    },
-)
+def build_workflow(
+    checkpointer: Optional[BaseCheckpointSaver] = None,
+    *,
+    scheduler: SchedulingService | None = None,
+) -> CompiledStateGraph:
+    """
+    Pure factory that constructs and compiles the Nova Desk LangGraph workflow.
+    Has zero import-time or database side effects:
+    - Production passes `PostgresSaver(pool)`.
+    - Tests & evaluation suites can pass `InMemorySaver()` or `None`.
+    """
+    if scheduler is None:
+        scheduler = SchedulingService(create_session)
+    graph = StateGraph(AgentState)
 
-# handle_apply_modification calls check_available_appointment_slots and/or
-# modify_appointment, then loops back to itself to present results.
-graph.add_conditional_edges(
-    "handle_apply_modification",
-    tools_condition,
-    {
-        "tools": "reschedule_tools",
-        END: END,
-    },
-)
-# reschedule_tools already has its return edge above (→ handle_appointment_lookup).
-# We need it to also return to handle_apply_modification — but LangGraph doesn't
-# allow a single node to have two different outgoing fixed edges.
-#
-# SOLUTION: replace the fixed edge with a conditional one that checks which phase
-# we're in and routes to the right node.
-# Remove the fixed edge above and replace with:
+    # ---- shared nodes ----
+    graph.add_node("classify_intent", classify_intent)
+    graph.add_node("handle_retreive_faqs", handle_retreive_faqs)
+    graph.add_node("handle_out_of_scope", handle_out_of_scope)
 
-# graph.add_edge("reschedule_tools", "handle_appointment_lookup")  ← REMOVED
+    # ---- booking flow nodes ----
+    graph.add_node("collect_appointment_details", collect_appointment_details)
+    graph.add_node("ask_booking_clarification", partial(ask_booking_clarification, scheduler=scheduler))
+    graph.add_node("handle_appointment_booking", partial(handle_appointment_booking, scheduler=scheduler))
 
-# The conditional below replaces BOTH return edges from reschedule_tools:
+    # ---- unified reschedule flow nodes ----
+    graph.add_node("collect_reschedule_details", partial(collect_reschedule_details, scheduler=scheduler))
+    graph.add_node("ask_reschedule_clarification", partial(ask_reschedule_clarification, scheduler=scheduler))
+    graph.add_node("handle_apply_modification", partial(handle_apply_modification, scheduler=scheduler))
 
-def route_after_reschedule_tools(state: AgentState) -> Literal[
-    "handle_appointment_lookup", "handle_apply_modification"
-]:
-    # Find the most recent ToolMessage to see what just ran
-    messages = state.get("messages", [])
-    for msg in reversed(messages):
-        if isinstance(msg, ToolMessage):
-            # If the lookup tool just ran, go back to lookup node to present results
-            if "get_appointments_by_email" in msg.name:
-                return "handle_appointment_lookup"
-            # Any other tool (check_slots, modify_appointment) → back to modification node
-            return "handle_apply_modification"
-    return "handle_appointment_lookup"  # fallback
+    # ---- Entry & Intent Routing ----
+    graph.add_edge(START, "classify_intent")
+
+    graph.add_conditional_edges(
+        "classify_intent",
+        route_intent,
+        {
+            "handle_retreive_faqs": "handle_retreive_faqs",
+            "handle_out_of_scope": "handle_out_of_scope",
+            "collect_appointment_details": "collect_appointment_details",
+            "collect_reschedule_details": "collect_reschedule_details",
+        },
+    )
+
+    graph.add_edge("handle_retreive_faqs", END)
+    graph.add_edge("handle_out_of_scope", END)
+
+    # ---- Booking Flow Edges ----
+    graph.add_conditional_edges(
+        "collect_appointment_details",
+        route_after_collecting_details,
+        {
+            "ask_booking_clarification": "ask_booking_clarification",
+            "handle_appointment_booking": "handle_appointment_booking",
+        },
+    )
+
+    graph.add_edge("ask_booking_clarification", END)
+    graph.add_edge("handle_appointment_booking", END)
+
+    # ---- Unified Reschedule Flow Edges ----
+    graph.add_conditional_edges(
+        "collect_reschedule_details",
+        route_after_collecting_reschedule,
+        {
+            "ask_reschedule_clarification": "ask_reschedule_clarification",
+            "handle_apply_modification": "handle_apply_modification",
+        },
+    )
+
+    graph.add_edge("ask_reschedule_clarification", END)
+    graph.add_edge("handle_apply_modification", END)
+
+    return graph.compile(checkpointer=checkpointer)
 
 
-# Replace the fixed reschedule_tools edge with this conditional one:
-graph.add_conditional_edges(
-    "reschedule_tools",
-    route_after_reschedule_tools,
-    {
-        "handle_appointment_lookup": "handle_appointment_lookup",
-        "handle_apply_modification": "handle_apply_modification",
-    },
-)
+def init_workflow() -> CompiledStateGraph:
+    """
+    Initialize the bounded PostgreSQL checkpointer pool, run `checkpointer.setup()`,
+    and compile the singleton production workflow during FastAPI lifespan startup.
+    """
+    global _pool, _workflow
+    if _workflow is not None:
+        return _workflow
 
-# ---------------------------------------------------------------------------
-# Compile
-# ---------------------------------------------------------------------------
+    _pool = ConnectionPool(
+        conninfo=settings.DATABASE_URL,
+        min_size=1,
+        max_size=settings.DB_POOL_SIZE,
+        kwargs={"autocommit": True},
+    )
+    checkpointer = PostgresSaver(_pool)
+    checkpointer.setup()
+    _workflow = build_workflow(checkpointer=checkpointer)
+    return _workflow
 
-workflow = graph.compile(checkpointer=checkpointer)
+
+def get_workflow() -> CompiledStateGraph:
+    """Return the compiled production workflow (initializing lazily if needed)."""
+    if _workflow is None:
+        return init_workflow()
+    return _workflow
+
+
+def close_workflow() -> None:
+    """Cleanly close the PostgreSQL checkpointer connection pool on shutdown."""
+    global _pool, _workflow
+    if _pool is not None:
+        try:
+            _pool.close()
+        except Exception as exc:
+            logger.warning("Error while closing checkpointer pool: %s", exc)
+        finally:
+            _pool = None
+            _workflow = None
