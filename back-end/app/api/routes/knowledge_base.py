@@ -1,35 +1,24 @@
-from fastapi import APIRouter, UploadFile, File
-from app.core.vectordb import get_vector_store
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.document_loaders import PyMuPDFLoader
-import tempfile
-import os
+from fastapi import APIRouter, Depends, File, UploadFile
+
+from app.api.dependencies import verify_admin_api_key
+from app.services.rag_service import RAGService
 
 router = APIRouter()
 
-@router.post("/upload-faqs", tags=["Admin"])
-async def upload_faqs(file: UploadFile = File(...)):
-    try:
 
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
-
-            content = await file.read()
-            tmp_file.write(content)
-            tmp_path = tmp_file.name
-
-        loader = PyMuPDFLoader(tmp_path)
-        documents = loader.load()
-        for doc in documents:
-            doc.metadata["source"] = file.filename
-
-        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-        chunks = text_splitter.split_documents(documents)
-        
-        vector_store = get_vector_store()
-        vector_store.add_documents(chunks)
-        os.remove(tmp_path)
-
-        return {"message": f"Successfully ingested {len(chunks)} chunks from {file.filename}"}
-        
-    except Exception as e:
-        return {"error": str(e)}
+@router.post(
+    "/upload-faqs",
+    tags=["Admin"],
+    dependencies=[Depends(verify_admin_api_key)],
+)
+def upload_faqs(file: UploadFile = File(...)):
+    file_bytes = file.file.read()
+    rag_service = RAGService()
+    result = rag_service.ingest_pdf(
+        file_bytes=file_bytes,
+        filename=file.filename or "",
+    )
+    return {
+        "message": f"Successfully ingested {result.chunks_ingested} chunks from {result.filename}",
+        "chunks_ingested": result.chunks_ingested,
+    }

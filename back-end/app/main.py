@@ -1,27 +1,35 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+import logging
+import time
 
-# Import your database initializer
-from app.core.database import create_db_and_tables
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 
-# Import your routers
-from app.api.routes import chat
-from app.api.routes import knowledge_base
-# from app.api.routes import admin  # Uncomment this when you build the admin/upload routes
+from app.agent.graph import close_workflow, init_workflow
+from app.api.exception_handlers import register_exception_handlers
+from app.api.routes import chat, knowledge_base
+from app.core.config import settings
+from app.core.database import create_db_and_tables, engine
+from app.core.logging import set_request_id, setup_logging
+
+setup_logging()
+logger = logging.getLogger(__name__)
+
 
 # ---------------------------------------------------------
-# 1. Lifespan Context Manager (Modern FastAPI Startup)
+# 1. Lifespan Context Manager (Modern FastAPI Startup/Shutdown)
 # ---------------------------------------------------------
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # What happens when the server starts
-    print("🚀 Starting up Nova Desk API...")
-    print("📦 Initializing Database Tables...")
+    logger.info("Starting up %s (v%s) in '%s' mode...", settings.PROJECT_NAME, settings.VERSION, settings.ENVIRONMENT)
+    logger.info("Ensuring database tables and LangGraph checkpointer exist...")
     create_db_and_tables()
+    init_workflow()
     yield
-    # What happens when the server shuts down
-    print("🛑 Shutting down Nova Desk API...")
+    logger.info("Shutting down %s and closing database pools...", settings.PROJECT_NAME)
+    close_workflow()
+    engine.dispose()
+
 
 # ---------------------------------------------------------
 # 2. Application Instance
@@ -29,41 +37,64 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Nova Desk AI Receptionist API",
     description="Backend for the Med Spa AI scheduling and RAG system.",
-    version="1.0.0",
-    lifespan=lifespan
+    version=settings.VERSION,
+    lifespan=lifespan,
 )
 
-# ---------------------------------------------------------
-# 3. CORS Middleware Configuration
-# ---------------------------------------------------------
-# During development, allowing "*" is fine. 
-# In production, change this to the exact domain of the Med Spa website.
-origins = [
-    "http://localhost:5173",  # React/Vite default port
-    "http://127.0.0.1:5173",
-    "*",                      # Allow all for widget embedding
-    "https://nova-desk-ai-agent.vercel.app",
-    "https://nova-desk-ai-agent-git-main-moiz-imrans-projects-80fe3802.vercel.app",
-]
+# Register centralized exception handlers
+register_exception_handlers(app)
 
+
+# ---------------------------------------------------------
+# 3. Correlation ID & Request Logging Middleware
+# ---------------------------------------------------------
+@app.middleware("http")
+async def correlation_id_middleware(request: Request, call_next):
+    incoming_req_id = request.headers.get("X-Request-ID")
+    req_id = set_request_id(incoming_req_id)
+    start_time = time.perf_counter()
+
+    response = await call_next(request)
+
+    duration_ms = int((time.perf_counter() - start_time) * 1000)
+    response.headers["X-Request-ID"] = req_id
+    logger.info(
+        "%s %s -> %d (%dms)",
+        request.method,
+        request.url.path,
+        response.status_code,
+        duration_ms,
+    )
+    return response
+
+
+# ---------------------------------------------------------
+# 4. CORS Middleware Configuration
+# ---------------------------------------------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=settings.ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"], # Allows POST, GET, PUT, etc.
+    allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Request-ID"],
 )
 
 # ---------------------------------------------------------
-# 4. Register Routers
+# 5. Register Routers
 # ---------------------------------------------------------
 app.include_router(chat.router)
-# app.include_router(admin.router) 
 app.include_router(knowledge_base.router)
 
+
 # ---------------------------------------------------------
-# 5. Health Check Endpoint
+# 6. Health Check Endpoint
 # ---------------------------------------------------------
 @app.get("/", tags=["System"])
 async def root():
-    return {"status": "online", "message": "Nova Desk API is running."}
+    return {
+        "status": "online",
+        "service": settings.PROJECT_NAME,
+        "version": settings.VERSION,
+        "message": "Nova Desk API is running.",
+    }

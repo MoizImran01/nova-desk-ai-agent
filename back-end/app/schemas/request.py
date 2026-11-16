@@ -1,29 +1,18 @@
-from sqlmodel import Field, SQLModel
 from typing import Optional
 import uuid
-from datetime import datetime, timezone
-from app.models.domain import UserBase, ServiceCategoryBase, ServiceBase
 
-class UserCreate(UserBase):
-    pass
+from pydantic import field_validator
+from sqlmodel import Field, SQLModel
 
-class UserUpdate(UserBase):
-    pass
-
-class ServiceCategoryCreate(ServiceCategoryBase):
-    pass
-
-class ServiceCreate(ServiceBase):
-    pass
-
-class AppointmentCreate(SQLModel):
-    pass
 
 class ChatRequest(SQLModel):
     conversation_id: Optional[uuid.UUID] = None
-    message: str
+    message: str = Field(min_length=1, max_length=2000, description="User chat message (1-2000 characters)")
 
-class ConversationUpdate(SQLModel):
-    human_override: Optional[bool] = None
-    status: Optional[str] = None
-
+    @field_validator("message")
+    @classmethod
+    def validate_non_blank_message(cls, value: str) -> str:
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("Message cannot be empty or whitespace only.")
+        return stripped

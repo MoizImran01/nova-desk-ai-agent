@@ -1,94 +1,26 @@
-import ast
 import json
 import logging
-from datetime import datetime
-from typing import Literal
-from zoneinfo import ZoneInfo
+from typing import Any, Literal
 
-from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
+from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from sqlmodel import Session, select
+from langchain_core.prompts import ChatPromptTemplate
 
-from app.agent.chat_model import (
-    get_collect_appointment_details_model,
-    get_collect_modification_details_model,
-    get_collect_reschedule_intent_model,
-    get_handle_apply_modification_model,
-    get_handle_appointment_booking_model,
-    get_handle_appointment_lookup_model,
-    get_handle_retreive_faqs_model,
-    get_intent_classification_model,
+from app.agent.chat_model import LLMRegistry, invoke_structured
+from app.agent.prompts import (
+    FAQ_SYSTEM_PROMPT,
+    INTENT_CLASSIFICATION_SYSTEM_PROMPT,
+    OUT_OF_SCOPE_REJECTION_MESSAGE,
 )
-from app.agent.state import AgentState
-from app.agent.tools import (
-    book_appointment,
-    check_available_appointment_slots,
-    get_appointments_by_email,
-    modify_appointment,
-    retreive_faqs,
-)
-from app.core.database import engine
-from app.models.domain import Service
-from app.schemas.agent import (
-    AppointmentDetails,
-    AppointmentReschedulingDetails,
-    IntentClassification,
-    RescheduleIntent,
-)
-from app.utils.date_utils import (
-    get_today,
-    resolve_explicit,
-    resolve_relative_term,
-    resolve_weekday,
-)
+from app.agent.state import AgentState, get_latest_human_message, record_tool
+from app.schemas.agent import IntentClassification
+from app.services.rag_service import RAGService
 
 logger = logging.getLogger(__name__)
 
 
-def get_valid_service_names() -> list[str]:
-    with Session(engine) as session:
-        services = session.exec(select(Service)).all()
-    return [s.name for s in services]
-
-
-def _modification_complete(modification: dict) -> bool:
-    has_id = modification.get("appointment_id") is not None
-    has_change = any([
-        modification.get("new_appointment_date"),
-        modification.get("new_appointment_time"),
-        modification.get("new_service_name"),
-    ])
-    date_ok = (
-        not modification.get("new_appointment_date")
-        or modification.get("date_confirmed") is True
-    )
-    time_ok = (
-        not modification.get("new_appointment_date")
-        or modification.get("new_appointment_time")
-    )
-    return has_id and has_change and date_ok and time_ok
-
-
-def _add_weekday_display(details: dict, date_key: str) -> dict:
-    """Return a copy of *details* with a human-readable '{date_key}_display'
-    field so the LLM never has to compute the day of the week itself."""
-    enriched = {**details}
-    date_str = details.get(date_key)
-    if date_str:
-        try:
-            parsed = datetime.strptime(date_str, "%Y-%m-%d").date()
-            enriched[f"{date_key}_display"] = parsed.strftime("%A, %B %d, %Y")
-        except (ValueError, TypeError):
-            pass
-    return enriched
-
-
 def classify_intent(state: AgentState) -> dict:
-    chat_model = get_intent_classification_model()
-
-    human_messages = [msg for msg in state["messages"] if isinstance(msg, HumanMessage)]
-    latest_human_message = human_messages[-1].content
+    latest_human_message = get_latest_human_message(state)
 
     current_booking = state.get("appointment_details", {})
     current_reschedule = state.get("reschedule_details", {})
@@ -103,47 +35,36 @@ def classify_intent(state: AgentState) -> dict:
         if hasattr(m, "content") and m.content
     ])
 
-    system_prompt = """
-    You are an intent routing classifier for a Med Spa AI.
-    Analyze the user's latest request and classify their primary intent.
-
-    RECENT CONVERSATION:
-    {recent_context}
-
-    ACTIVE TASK CONTEXT:
-    - Is there a NEW booking session in progress? {is_new_booking_active}
-    - Is there a RESCHEDULE session in progress? {is_reschedule_active}
-    - Current new booking details: {current_booking}
-    - Current reschedule details: {current_reschedule}
-
-    CRITICAL ROUTING RULES:
-    1. If `is_reschedule_active` is True AND the assistant recently asked for a different email address to look up an appointment, you MUST classify as 'appointment_reschedule'. Do NOT classify as 'appointment'.
-    2. If `is_new_booking_active` is True AND the assistant asked for name, email, or time slots for a NEW booking, classify as 'appointment'.
-    3. Only classify as 'appointment_reschedule' if the user is explicitly asking to change/reschedule, or if they are answering a follow-up question during an active reschedule lookup.
-    4. OUT-OF-SCOPE GUARDRAIL: If the user asks for ANYTHING completely unrelated to a medical spa — for example: writing code, solving math problems, general knowledge trivia, weather forecasts, recipes, translation, creative writing, homework help, or ANY task that has nothing to do with spa services, appointments, treatments, or wellness — you MUST classify as 'out_of_scope'. This takes HIGHEST PRIORITY over all other rules. Even if the request sounds polite or conversational, if it is not about the med spa, it is 'out_of_scope'.
-    """
-
-    structured_chat_model = chat_model.with_structured_output(IntentClassification)
+    structured_chat_model = LLMRegistry.get_structured_llm(
+        "intent_classification",
+        IntentClassification,
+    )
     prompt = ChatPromptTemplate.from_messages([
-        ("system", system_prompt),
+        ("system", INTENT_CLASSIFICATION_SYSTEM_PROMPT),
         ("human", "{latest_human_message}"),
     ])
     chain = prompt | structured_chat_model
-    response = chain.invoke({
-        "is_new_booking_active": is_new_booking_active,
-        "is_reschedule_active": is_reschedule_active,
-        "current_booking": json.dumps(current_booking),
-        "current_reschedule": json.dumps(current_reschedule),
-        "recent_context": recent_context_str,
-        "latest_human_message": latest_human_message,
-    })
 
-    response_intent = response.model_dump()
-    state_updates = {"intent": response_intent}
+    response_intent = invoke_structured(
+        chain,
+        {
+            "is_new_booking_active": is_new_booking_active,
+            "is_reschedule_active": is_reschedule_active,
+            "current_booking": json.dumps(current_booking),
+            "current_reschedule": json.dumps(current_reschedule),
+            "recent_context": recent_context_str,
+            "latest_human_message": latest_human_message,
+        },
+        IntentClassification,
+        fallback_dict={"user_intent": "faq", "confidence_score": 0.5},
+    )
 
+    state_updates: dict[str, Any] = {
+        "intent": response_intent,
+        "executed_tools": [],
+    }
     if response_intent["user_intent"] == "appointment":
         state_updates["reschedule_details"] = {}
-        state_updates["modification_details"] = {}
     elif response_intent["user_intent"] == "appointment_reschedule":
         state_updates["appointment_details"] = {}
 
@@ -154,639 +75,60 @@ def classify_intent(state: AgentState) -> dict:
 def route_intent(state: AgentState) -> Literal[
     "handle_retreive_faqs",
     "collect_appointment_details",
-    "collect_reschedule_intent",
-    "collect_modification_details",
-    "handle_apply_modification",
+    "collect_reschedule_details",
     "handle_human_escalation",
-    "handle_out_of_scope"
+    "handle_out_of_scope",
 ]:
     intent = state["intent"]["user_intent"]
 
     if intent == "out_of_scope":
         return "handle_out_of_scope"
-    elif intent == "faq":
+    if intent == "faq":
         return "handle_retreive_faqs"
-    elif intent == "appointment":
+    if intent == "appointment":
         return "collect_appointment_details"
-    elif intent == "appointment_reschedule":
-        reschedule = state.get("reschedule_details", {})
-        modification = state.get("modification_details", {})
-
-        if not reschedule.get("user_email"):
-            return "collect_reschedule_intent"
-        if not reschedule.get("lookup_done"):
-            return "collect_reschedule_intent"
-        if not _modification_complete(modification):
-            return "collect_modification_details"
-        return "handle_apply_modification"
-    elif intent == "human_escalation":
+    if intent == "appointment_reschedule":
+        return "collect_reschedule_details"
+    if intent == "human_escalation":
         return "handle_human_escalation"
-    else:
-        return "handle_retreive_faqs"
+    return "handle_retreive_faqs"
 
 
 def handle_retreive_faqs(state: AgentState) -> dict:
-    human_messages = [msg for msg in state["messages"] if isinstance(msg, HumanMessage)]
-    query = human_messages[-1].content
-    retrieved_faqs = retreive_faqs(query)
-    logger.debug("Retrieved FAQs: %s", retrieved_faqs)
+    query = get_latest_human_message(state)
 
-    chat_model = get_handle_retreive_faqs_model()
     prompt = ChatPromptTemplate.from_messages([
-        (
-            "system",
-            """You are Nova ✨, the warm, knowledgeable, and elegant AI concierge for Nova Wellness & Aesthetics.
-
-            Your goal is to answer guest inquiries with clarity, warmth, and a touch of luxury.
-
-            ### GUIDELINES:
-            1. **Tone & Style:** Friendly, professional, empathetic, and conversational. Use subtle sparkle emojis (✨, 💫, 🌸) where appropriate to maintain an inviting, high-end spa aesthetic.
-            2. **Fact Grounding:** Base your answers strictly on the provided FAQ context:
-            ---
-            {retrieved_faqs}
-            ---
-            3. **Format for Readability:** Use concise paragraphs or clear bullet points for durations, pricing, and prep instructions. Keep answers punchy and easy to scan.
-            4. **Fallback:** If the answer cannot be determined from the provided FAQs, do not guess or fabricate information. Politely say:
-            "Hmm... let me connect you with one of our human specialists to get you the exact details! 🌸"
-            """
-        ),
-        ("human", "{query}")
+        ("system", FAQ_SYSTEM_PROMPT),
+        ("human", "{query}"),
     ])
-    chain = prompt | chat_model | StrOutputParser()
-    faq_response = chain.invoke({"retrieved_faqs": retrieved_faqs, "query": query})
+
+    def _generate_faq_answer(retrieved_faqs: str) -> str:
+        chat_model = LLMRegistry.get_text_llm("handle_retreive_faqs")
+        chain = prompt | chat_model | StrOutputParser()
+        return chain.invoke({"retrieved_faqs": retrieved_faqs, "query": query})
+
+    rag_service = RAGService()
+    faq_result = rag_service.answer_faq(query=query, generate_fn=_generate_faq_answer)
+    faq_response = faq_result.answer
 
     current_booking = state.get("appointment_details", {})
-    service = current_booking.get("service_name", "your appointment")
-
     if bool(current_booking):
-        handle_in_progress_prompt = f"""
-            The user just asked an off-topic question. You have already generated this answer: "{faq_response}".
-            Now, look at their current partial booking data: {json.dumps(current_booking, indent=2)}.
-            Write a single closing sentence that smoothly transitions back and asks if they would like to 
-            proceed with finishing their booking for {service}.
-            """
-        in_progress_response = chat_model.invoke(handle_in_progress_prompt).content
-        final_response = f"{faq_response}\n\n{in_progress_response}"
+        service = current_booking.get("service_name") or "your appointment"
+        transition = (
+            f"Whenever you're ready, would you like to continue with finishing "
+            f"your booking for {service}? ✨"
+        )
+        final_response = f"{faq_response}\n\n{transition}"
     else:
         final_response = faq_response
 
-    return {"messages": [AIMessage(content=final_response)]}
-
-
-def collect_appointment_details(state: AgentState) -> dict:
-    chat_model = get_collect_appointment_details_model()
-    structured_chat_model = chat_model.with_structured_output(AppointmentDetails)
-    today = get_today()
-    human_messages = [msg for msg in state["messages"] if isinstance(msg, HumanMessage)]
-    latest_human_message = human_messages[-1].content
-    appointment_details = state.get("appointment_details", {})
-
-    prompt = f"""
-    You are a data extraction assistant. Extract booking details from the user's message.
-
-    CURRENT APPOINTMENT DETAILS: {json.dumps(appointment_details, indent=2)}
-    USER'S LATEST MESSAGE: {latest_human_message}
-
-    For dates: DO NOT calculate or convert any date yourself. Only classify the TYPE
-    of expression and extract the RAW value (see field descriptions). Code resolves
-    the actual calendar date — that is not your job.
-
-    If the user is answering a yes/no confirmation about which date was meant
-    (e.g. "yes that one", "no, the week after"), set date_confirmed accordingly and
-    adjust date_qualifier to 'this' or 'next' based on their answer.
-
-    Retain all existing details not explicitly changed in the latest message.
-    """
-    response = structured_chat_model.invoke(prompt).model_dump()
-    response["date_confirmed"] = str(response.get("date_confirmed", "false")).lower() == "true"
-
-    expr_type = response.get("date_expression_type")
-    expr_value = response.get("date_expression_value")
-    qualifier = response.get("date_qualifier") or "none"
-
-    if expr_type == "weekday" and expr_value:
-        try:
-            resolved = resolve_weekday(expr_value, today, qualifier=None if qualifier == "none" else qualifier)
-            response["appointment_date"] = resolved.date_str
-            response["date_confirmed"] = not resolved.needs_confirmation
-            response["_pending_confirmation_question"] = resolved.confirmation_question
-        except ValueError:
-            pass
-    elif expr_type == "relative" and expr_value:
-        try:
-            resolved = resolve_relative_term(expr_value, today)
-            response["appointment_date"] = resolved.date_str
-            response["date_confirmed"] = True
-        except ValueError:
-            pass
-    elif expr_type == "explicit" and expr_value:
-        try:
-            resolved = resolve_explicit(expr_value, today)
-            response["appointment_date"] = resolved.date_str
-            response["date_confirmed"] = True
-        except ValueError:
-            response["appointment_date"] = appointment_details.get("appointment_date")
-    else:
-        response["appointment_date"] = appointment_details.get("appointment_date")
-        response["date_confirmed"] = appointment_details.get("date_confirmed", False)
-
-    logger.debug("Extracted Appointment Details: %s", response)
-    return {"appointment_details": response}
-
-
-def route_after_collecting_details(state: AgentState) -> Literal[
-    "ask_date_confirmation",
-    "ask_for_missing_field",
-    "handle_appointment_booking"
-]:
-    details = state.get("appointment_details", {})
-    if details.get("appointment_date") and not details.get("date_confirmed", False):
-        return "ask_date_confirmation"
-    required_fields = ["appointment_date", "appointment_time", "service_name", "user_name", "user_email"]
-    missing_fields = [field for field in required_fields if not details.get(field)]
-    blocking_fields = [field for field in missing_fields if field != "appointment_time"]
-    if blocking_fields:
-        return "ask_for_missing_field"
-    return "handle_appointment_booking"
-
-
-def ask_date_confirmation(state: AgentState) -> dict:
-    booking = state.get("appointment_details", {})
-    modification = state.get("modification_details", {})
-    question = (
-        booking.get("_pending_confirmation_question")
-        or modification.get("_pending_confirmation_question")
-        or "Which exact date did you mean?"
-    )
-    return {"messages": [AIMessage(content=question)]}
-
-
-def ask_for_missing_field(state: AgentState) -> dict:
-    details = state.get("appointment_details", {})
-    field_prompts = {
-        "user_name": "Could you please tell me your full name?",
-        "user_email": "Could you also share your email address so I can confirm your booking?",
-        "service_name": "Which service would you like to book?",
-        "appointment_date": "What date would you like to come in?",
-    }
-    required_fields = ["service_name", "appointment_date", "user_name", "user_email"]
-    missing_fields = [field for field in required_fields if not details.get(field)]
-    question = field_prompts.get(missing_fields[0], "Could you provide a bit more detail so I can finish booking this?")
-    return {"messages": [AIMessage(content=question)]}
-
-
-def handle_appointment_booking(state: AgentState) -> dict:
-    chat_model = get_handle_appointment_booking_model()
-    current_appointment_details = state.get("appointment_details", {})
-    current_appointment_details = _add_weekday_display(current_appointment_details, "appointment_date")
-    required_fields = ["appointment_date", "appointment_time", "service_name", "user_name", "user_email"]
-    has_all_required = all(current_appointment_details.get(field) for field in required_fields)
-
-    if has_all_required:
-        tools_to_bind = [check_available_appointment_slots, book_appointment]
-        booking_instruction = """
-    3. All required details are present and confirmed. Call 'book_appointment' now
-       to finalize this booking. Do not ask the user any further questions first.
-       Once you receive the tool result for 'book_appointment':
-    - Warmly confirm the booking with the user.
-    - Summarize their appointment details (date, time, and service).
-    - End with a polite, welcoming closing statement like "Thank you for booking with us! We look forward to seeing you."
-    """
-    else:
-        tools_to_bind = [check_available_appointment_slots]
-        missing = [field for field in required_fields if not current_appointment_details.get(field)]
-        booking_instruction = f"""
-    3. You do not have permission to finalize this booking yet. The following
-       required details are still missing: {missing}. Do not attempt to book
-       anything. Simply continue the conversation to collect what's missing,
-       or present available slots if you're still waiting on a time.
-    """
-
-    chat_model_with_tools = chat_model.bind_tools(tools_to_bind)
-    recent_user_context = state.get("messages", [])[-4:]
-    current_time = datetime.now(ZoneInfo("Asia/Karachi")).strftime("%A, %B %d, %Y")
-
-    system_prompt = """
-    You are the booking assistant for a Med Spa.
-    Today's exact date is: {current_time}.
-
-    Details collected so far:
-    {current_appointment_details}
-
-    CRITICAL: When mentioning any date to the user, ALWAYS use the
-    `appointment_date_display` value (e.g. "Wednesday, September 02, 2026").
-    NEVER calculate or guess the day of the week yourself.
-
-    INSTRUCTIONS:
-    1. If `appointment_date` is set but `appointment_time` is null, call
-    'check_available_appointment_slots' with that exact date string.
-
-    Once you receive the tool result:
-    - If status is "available": present the slots to the user and ask them to pick one.
-    - If status is "fully_booked": inform the user that date is unavailable, then
-        immediately present the nearest_alternatives (each with its date and slots)
-        in the same reply so the user can choose a different day without any back-and-forth.
-
-    2. If `user_name` is missing, ask for it conversationally. Do not guess or invent it.
-    """ + booking_instruction
-
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", system_prompt),
-        MessagesPlaceholder(variable_name="recent_user_context"),
-    ])
-    chain = prompt | chat_model_with_tools
-
-    try:
-        response = chain.invoke({
-            "recent_user_context": recent_user_context,
-            "current_time": current_time,
-            "current_appointment_details": json.dumps(current_appointment_details, indent=2)
-        })
-    except Exception as e:
-        error_str = str(e)
-        if "tool_use_failed" in error_str or "was not in request.tools" in error_str:
-            logger.warning("Tool call hallucination in handle_appointment_booking: %s", error_str)
-            fallback_chain = prompt | chat_model | StrOutputParser()
-            fallback_text = fallback_chain.invoke({
-                "recent_user_context": recent_user_context,
-                "current_time": current_time,
-                "current_appointment_details": json.dumps(current_appointment_details, indent=2)
-            })
-            return {"messages": [AIMessage(content=fallback_text)]}
-        raise
-
-    if recent_user_context and isinstance(recent_user_context[-1], ToolMessage) and recent_user_context[-1].name == "book_appointment":
-        if "successfully booked" in recent_user_context[-1].content.lower():
-            return {
-                "messages": [response],
-                "appointment_details": {}
-            }
-    return {"messages": [response]}
-
-
-def collect_reschedule_intent(state: AgentState) -> dict:
-    chat_model = get_collect_reschedule_intent_model()
-    structured_chat_model = chat_model.with_structured_output(RescheduleIntent)
-    human_messages = [msg for msg in state["messages"] if isinstance(msg, HumanMessage)]
-    latest_human_message = human_messages[-1].content
-    existing_reschedule_details = state.get("reschedule_details", {})
-
-    prompt = f"""
-    You are extracting an email address for an appointment modification request.
-    CURRENT KNOWN DETAILS: {json.dumps(existing_reschedule_details, indent=2)}
-    USER'S LATEST MESSAGE: {latest_human_message}
-    Extract the user's email address if they provided one. If not present, leave as null.
-    """
-    extracted = structured_chat_model.invoke(prompt).model_dump()
-    merged = {**existing_reschedule_details}
-    if extracted.get("user_email"):
-        merged["user_email"] = extracted["user_email"]
-
-    return {"reschedule_details": merged}
-
-
-def route_after_collecting_reschedule_intent(state: AgentState) -> Literal["ask_for_email", "handle_appointment_lookup"]:
-    details = state.get("reschedule_details", {})
-    if not details.get("user_email"):
-        return "ask_for_email"
-    return "handle_appointment_lookup"
-
-
-def ask_for_email(state: AgentState) -> dict:
-    return {"messages": [AIMessage(content="Sure, I can help you with that. Could you please share your email address?")]}
-
-
-def handle_appointment_lookup(state: AgentState) -> dict:
-    chat_model = get_handle_appointment_lookup_model()
-    chat_model_with_tools = chat_model.bind_tools([get_appointments_by_email])
-    rescheduling_details = state.get("reschedule_details", {})
-    user_email = rescheduling_details.get("user_email")
-    recent_user_context = state.get("messages", [])[-6:]
-    current_date = datetime.now(ZoneInfo("Asia/Karachi")).strftime("%A, %B %d, %Y")
-
-    has_tool_result = False
-    tool_status = None
-
-    for m in recent_user_context:
-        if isinstance(m, ToolMessage) and (m.name or "") == "get_appointments_by_email":
-            has_tool_result = True
-            try:
-                data = json.loads(m.content)
-            except json.JSONDecodeError:
-                try:
-                    data = ast.literal_eval(m.content)
-                except Exception as e:
-                    logger.warning("Error parsing tool message with ast: %s", e)
-                    data = {}
-            except Exception as e:
-                logger.error("Unexpected error parsing tool message: %s", e)
-                data = {}
-
-            tool_status = data.get("status")
-            break
-
-    system_prompt = """
-    You are the appointment modification assistant.
-    The user wants to modify an existing appointment.
-    Their email is: {user_email}
-    Today's exact date is: {current_date}.
-
-    STEP 1: Call 'get_appointments_by_email' with this email immediately.
-
-    Once you have the result (IMPORTANT — when presenting appointment dates,
-    derive the correct day of the week from today's date above; NEVER guess the weekday):
-    - If status is "not_found" or "no_appointments": Warmly inform the user that you couldn't find any upcoming appointments under that email, and ask if they might have booked under a different email address.
-    - If status is "found" and there is ONE appointment: confirm its details and ask
-      what they would like to change (date, time, or service).
-    - If status is "found" and there are MULTIPLE appointments: list all of them clearly
-      (numbered, with date/time/service) and ask which one they want to modify.
-    """
-
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", system_prompt),
-        MessagesPlaceholder(variable_name="recent_user_context"),
-    ])
-    chain = prompt | chat_model_with_tools
-    response = chain.invoke({
-        "recent_user_context": recent_user_context,
-        "user_email": user_email,
-        "current_date": current_date,
-    })
-
-    if has_tool_result:
-        if tool_status in ["not_found", "no_appointments"]:
-            updated_reschedule = {"user_email": None, "lookup_done": False}
-        else:
-            updated_reschedule = {**rescheduling_details, "lookup_done": True}
-    else:
-        updated_reschedule = {**rescheduling_details}
-
     return {
-        "messages": [response],
-        "reschedule_details": updated_reschedule,
+        "messages": [AIMessage(content=final_response)],
+        "retrieved_contexts": faq_result.raw_contexts,
+        "executed_tools": record_tool(state, "retrieve_faqs"),
     }
-
-
-def collect_modification_details(state: AgentState) -> dict:
-    chat_model = get_collect_modification_details_model()
-    structured_chat_model = chat_model.with_structured_output(AppointmentReschedulingDetails)
-    today = get_today()
-
-    human_messages = [msg for msg in state["messages"] if isinstance(msg, HumanMessage)]
-    latest_human_message = human_messages[-1].content
-    existing = state.get("modification_details", {})
-    valid_services = get_valid_service_names()
-
-    existing_appointments = []
-    for msg in reversed(state["messages"]):
-        if isinstance(msg, ToolMessage) and (msg.name or "") == "get_appointments_by_email":
-            try:
-                data = json.loads(msg.content)
-            except json.JSONDecodeError:
-                try:
-                    data = ast.literal_eval(msg.content)
-                except Exception as e:
-                    logger.warning("Error parsing tool message in modification: %s", e)
-                    data = {}
-            if data.get("status") == "found":
-                existing_appointments = data.get("appointments", [])
-            break
-
-    appointments_by_weekday = {}
-    for appt in existing_appointments:
-        try:
-            appt_date = datetime.strptime(appt["appointment_date"], "%Y-%m-%d").date()
-            weekday = appt_date.strftime("%A").lower()
-            appointments_by_weekday[weekday] = appt
-        except Exception:
-            pass
-
-    prompt = f"""
-    You are extracting the changes a user wants to make to their appointment.
-
-    USER'S EXISTING APPOINTMENTS:
-    {json.dumps(existing_appointments, indent=2)}
-
-    VALID SERVICES: {', '.join(valid_services)}
-    CURRENT KNOWN MODIFICATION DETAILS: {json.dumps(existing, indent=2)}
-    USER'S LATEST MESSAGE: {latest_human_message}
-
-    CRITICAL EXTRACTION RULES:
-
-    1. IDENTIFYING THE APPOINTMENT (appointment_id):
-       - If the user has ONLY ONE existing appointment, ALWAYS extract its appointment_id.
-       - If the user refers to an appointment possessively (e.g. "Monday's appointment",
-         "the Botox one", "the 10am one"), find the match in EXISTING APPOINTMENTS and
-         extract that appointment_id. Do NOT treat this as a date change.
-
-    2. EXTRACTING DATE CHANGES — read carefully:
-       - A date change means the user wants the appointment on a DIFFERENT day.
-       - Signals of a date change: words like "move to", "reschedule to", "change to",
-         "next [day]", "this [day]", or any qualifier like "next" or "this".
-       - If the user says "move it to next Monday" or "reschedule to this Friday",
-         that IS a date change — extract date_expression_type, date_expression_value,
-         and date_qualifier.
-       - A possessive like "Monday's time" or "the Monday one" is NOT a date change.
-         It is identifying which appointment. Only extract new_appointment_time in that case.
-       - Key rule: if date_qualifier is "next" or "this", it is ALWAYS a date change,
-         even if that weekday matches an existing appointment.
-
-    3. For date changes: classify type/value/qualifier only — never calculate the date yourself.
-    """
-
-    extracted = structured_chat_model.invoke(prompt).model_dump()
-    merged = {**existing}
-
-    for key in ("appointment_id", "new_appointment_time", "new_service_name"):
-        if extracted.get(key) is not None:
-            merged[key] = extracted[key]
-
-    expr_type = extracted.get("date_expression_type")
-    expr_value = (extracted.get("date_expression_value") or "").lower()
-    qualifier = extracted.get("date_qualifier") or "none"
-    date_confirmed_raw = extracted.get("date_confirmed", "false")
-
-    directional_verbs = ["move to", "reschedule to", "change to", "switch to", "shift to"]
-    message_lower = latest_human_message.lower()
-    has_directional_verb = any(verb in message_lower for verb in directional_verbs)
-
-    is_identifying_not_moving = (
-        expr_type == "weekday"
-        and expr_value in appointments_by_weekday
-        and qualifier == "none"
-        and not has_directional_verb
-    )
-
-    if is_identifying_not_moving:
-        if not merged.get("appointment_id"):
-            matched_appt = appointments_by_weekday[expr_value]
-            merged["appointment_id"] = matched_appt.get("appointment_id")
-        merged["date_confirmed"] = existing.get("date_confirmed", False)
-    else:
-        # Determine base_date from the appointment we are modifying
-        base_date = today
-        if merged.get("appointment_id"):
-            for appt in existing_appointments:
-                if appt.get("appointment_id") == merged["appointment_id"]:
-                    try:
-                        base_date = datetime.strptime(appt["appointment_date"], "%Y-%m-%d").date()
-                    except Exception:
-                        pass
-                    break
-
-        if expr_type == "weekday" and expr_value:
-            try:
-                resolved = resolve_weekday(
-                    expr_value, today,
-                    qualifier=None if qualifier == "none" else qualifier
-                )
-                merged["new_appointment_date"] = resolved.date_str
-                merged["date_confirmed"] = not resolved.needs_confirmation
-                merged["_pending_confirmation_question"] = resolved.confirmation_question
-            except ValueError:
-                pass
-        elif expr_type == "relative" and expr_value:
-            try:
-                resolved = resolve_relative_term(expr_value, today, base_date=base_date)
-                merged["new_appointment_date"] = resolved.date_str
-                merged["date_confirmed"] = True
-            except ValueError:
-                pass
-        elif expr_type == "explicit" and expr_value:
-            try:
-                resolved = resolve_explicit(expr_value, today, base_date=base_date)
-                merged["new_appointment_date"] = resolved.date_str
-                merged["date_confirmed"] = True
-            except ValueError:
-                pass
-        elif str(date_confirmed_raw).lower() == "true":
-            merged["date_confirmed"] = True
-        else:
-            merged["date_confirmed"] = existing.get("date_confirmed", False)
-
-    logger.debug("Extracted Modification Details: %s", merged)
-    return {"modification_details": merged}
-
-
-def route_after_collecting_modification(state: AgentState) -> Literal["ask_date_confirmation", "handle_apply_modification"]:
-    details = state.get("modification_details", {})
-    if details.get("new_appointment_date") and not details.get("date_confirmed", False):
-        return "ask_date_confirmation"
-    return "handle_apply_modification"
-
-
-def handle_apply_modification(state: AgentState) -> dict:
-    chat_model = get_handle_apply_modification_model()
-    modification = state.get("modification_details", {})
-    modification = _add_weekday_display(modification, "new_appointment_date")
-
-    has_appointment_id = modification.get("appointment_id") is not None
-    has_new_date = bool(modification.get("new_appointment_date"))
-    has_new_time = bool(modification.get("new_appointment_time"))
-    has_new_service = bool(modification.get("new_service_name"))
-    has_something_to_change = has_new_date or has_new_time or has_new_service
-
-    is_ready_to_modify = False
-    if has_appointment_id and has_something_to_change:
-        is_ready_to_modify = True
-        if has_new_date and not has_new_time:
-            is_ready_to_modify = False
-
-    if is_ready_to_modify:
-        tools_to_bind = [check_available_appointment_slots, modify_appointment]
-        modify_instruction = """
-    3. All required details are present and confirmed. Call 'modify_appointment' now.
-       CRITICAL: You MUST pass EVERY field that has a value in the modification_details 
-       dictionary (new_appointment_date, new_appointment_time, new_service_name) into 
-       the tool call. Do not leave any of them out. Do not ask the user any further 
-       questions first.
-    """
-    else:
-        tools_to_bind = [check_available_appointment_slots]
-        if not has_appointment_id:
-            missing_reason = "the appointment_id is missing — ask the user which appointment they mean."
-        elif has_new_date and not has_new_time:
-            missing_reason = (
-                "a new date was requested but no new_appointment_time has been chosen yet. "
-                "If slots for the new date haven't been shown yet, call "
-                "'check_available_appointment_slots' with the new_appointment_date. "
-                "If slots were already shown, read the user's latest message for their "
-                "chosen time and ask them to confirm it if it's ambiguous."
-            )
-        elif not has_something_to_change:
-            missing_reason = "no changes have been specified yet — ask the user what they'd like to change."
-        else:
-            missing_reason = "required details are still incomplete — continue collecting them."
-
-        modify_instruction = f"""
-    3. You do not have permission to finalize this modification yet, because
-       {missing_reason}
-       Do not attempt to call 'modify_appointment' under any circumstances right now.
-    """
-
-    chat_model_with_tools = chat_model.bind_tools(tools_to_bind)
-    recent_context = state.get("messages", [])[-6:]
-
-    system_prompt = """
-    You are the appointment modification assistant.
-    Modification details collected so far: {modification_details}
-
-    CRITICAL: When mentioning any date to the user, ALWAYS use the
-    `new_appointment_date_display` value (e.g. "Wednesday, September 02, 2026").
-    NEVER calculate or guess the day of the week yourself.
-
-    INSTRUCTIONS:
-    1. If the user wants a new date but new_appointment_time is missing,
-       call 'check_available_appointment_slots' with the new_appointment_date first.
-       - If status is "available": present slots and ask which one they want.
-       - If status is "fully_booked": present the nearest_alternatives immediately.
-    2. If appointment_id is missing, ask the user which appointment they meant.
-    """ + modify_instruction
-
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", system_prompt),
-        MessagesPlaceholder(variable_name="recent_context"),
-    ])
-    chain = prompt | chat_model_with_tools
-
-    try:
-        response = chain.invoke({
-            "recent_context": recent_context,
-            "modification_details": json.dumps(modification, indent=2)
-        })
-    except Exception as e:
-        error_str = str(e)
-        if "tool_use_failed" in error_str or "was not in request.tools" in error_str:
-            logger.warning("Tool call hallucination in handle_apply_modification: %s", error_str)
-            fallback_chain = prompt | chat_model | StrOutputParser()
-            fallback_text = fallback_chain.invoke({
-                "recent_context": recent_context,
-                "modification_details": json.dumps(modification, indent=2)
-            })
-            return {"messages": [AIMessage(content=fallback_text)]}
-        raise
-
-    if recent_context and isinstance(recent_context[-1], ToolMessage) and recent_context[-1].name == "modify_appointment":
-        if "success" in recent_context[-1].content.lower():
-            return {
-                "messages": [response],
-                "reschedule_details": {},
-                "modification_details": {}
-            }
-    return {"messages": [response]}
 
 
 def handle_out_of_scope(state: AgentState) -> dict:
-    """Deterministic guardrail for out-of-bounds requests.
-
-    Bypasses Pinecone retrieval and LLM generation entirely, returning a
-    fixed polite refusal. This prevents prompt-hijacking (e.g. "write me
-    a Python script") and saves token costs.
-    """
-    rejection = (
-        "I appreciate your curiosity, but I'm exclusively here to assist with "
-        "Nova Wellness & Aesthetics! ✨ I can help you book an appointment, "
-        "reschedule an existing one, or answer questions about our treatments "
-        "and services. How can I help you look and feel your best today? 🌸"
-    )
-    return {"messages": [AIMessage(content=rejection)]}
+    """Deterministic guardrail for out-of-bounds requests."""
+    return {"messages": [AIMessage(content=OUT_OF_SCOPE_REJECTION_MESSAGE)]}

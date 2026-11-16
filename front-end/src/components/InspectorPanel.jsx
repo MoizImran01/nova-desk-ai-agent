@@ -10,7 +10,6 @@ function InspectorPanel({ agentState, latencyMs }) {
   const executedTools = agentState?.executed_tools || [];
   const appointmentDetails = agentState?.appointment_details || {};
   const rescheduleDetails = agentState?.reschedule_details || {};
-  const modificationDetails = agentState?.modification_details || {};
 
   const confidenceScore = parseFloat(intent.confidence_score || '0');
   const confidenceClass =
@@ -25,7 +24,6 @@ function InspectorPanel({ agentState, latencyMs }) {
   // Build combined state for the JSON viewer
   const hasAppointment = Object.keys(appointmentDetails).length > 0;
   const hasReschedule = Object.keys(rescheduleDetails).length > 0;
-  const hasModification = Object.keys(modificationDetails).length > 0;
 
   return (
     <div className="inspector-panel">
@@ -102,15 +100,7 @@ function InspectorPanel({ agentState, latencyMs }) {
                 />
               ) : null}
 
-              {hasModification ? (
-                <JsonTree
-                  data={modificationDetails}
-                  name="modification_details"
-                  defaultExpanded={true}
-                />
-              ) : null}
-
-              {!hasAppointment && !hasReschedule && !hasModification && (
+              {!hasAppointment && !hasReschedule && (
                 <p className="json-empty-state">No active state — waiting for user input</p>
               )}
             </div>

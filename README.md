@@ -7,155 +7,12 @@ Powered by **FastAPI** and **LangGraph**, the backend hosts the conversational s
 
 * **Vercel Deployed URL:** [https://nova-desk-ai-agent.vercel.app](https://nova-desk-ai-agent.vercel.app)
 
-## 🚀 Key Features
+## Scheduling and FAQ workflows
 
-* **Multi-Agent Orchestration**: Structured state machine using **LangGraph** to manage complex conversational paths, conditional routing, and cyclic loops.
-* **Intelligent Intent Classification**: Dynamic classification of user messages into distinct flows (`faq`, `appointment`, `appointment_reschedule`, `human_escalation`, `out_of_scope`).
-* **Robust Out-of-Scope Guardrails**: Zero-cost deterministic prompt filter bypassing the LLM for off-topic prompts to prevent jailbreaking/hijacking and save API tokens.
-* **Context-Aware Booking**: Multi-turn dialogue collection for appointment details (Name, Email, Service, Date, Time) with validation.
-* **Auto-Alternative Slot Finder**: Gracefully handle fully-booked slots by searching database schedules up to 7 days ahead and proposing nearest alternatives.
-* **Fuzzy Service Matching**: Corrects user typos for service names (e.g., matching "botoxx" to "Botox") automatically using Levenshtein distance.
-* **Possessive Identification**: Distinguishes Selection (*"Let's change Monday's appointment"*) from Rescheduling (*"Move the appointment to Monday"*).
-* **Relative Date Math & Resolution**: Processes complex expressions like *"next day"*, *"tomorrow"*, or *"next Friday"* relative to target dates.
-* **Date Ambiguity Disambiguation**: Holds the execution state to clarify ambiguous inputs (like just *"Friday"*) via conversational confirmation loops.
-* **Tool Call Hallucination Fallback**: Safely catches LLM schema hallucinations, transitioning back to natural text chains without crashing.
-
----
-
-## 🏗️ System Architecture & State Flow
-
-```mermaid
-graph TD
-    %% Styling Classes
-    classDef startEnd fill:#f9f,stroke:#333,stroke-width:2px,color:#000;
-    classDef router fill:#ffebcc,stroke:#f8a100,stroke-width:1.5px,stroke-dasharray: 5 5,color:#000;
-    classDef node fill:#e1f5fe,stroke:#0288d1,stroke-width:2px,color:#000;
-    classDef tool fill:#e8f5e9,stroke:#388e3c,stroke-width:2px,color:#000;
-    classDef db fill:#eceff1,stroke:#455a64,stroke-width:2px,color:#000;
-
-    %% Entry and Exit Points
-    START([START]) --> classify_intent
-    class START startEnd;
-
-    %% Persistence & Database
-    subgraph Storage ["Persistence & Data Layer"]
-        Database[("PostgreSQL Database<br/>(Users, Appointments, Conversations)")]
-        Checkpointer[("PostgresSaver Checkpointer<br/>(LangGraph State Checkpoints)")]
-    end
-    class Database,Checkpointer db;
-
-    %% Main Routing Area
-    subgraph IntentSystem ["Intent Classification & Global Routing"]
-        classify_intent("classify_intent Node<br/>(Analyze latest human message)")
-        route_intent{"route_intent<br/>Conditional Edge"}
-        
-        classify_intent --> route_intent
-        
-        %% Static Guardrails
-        handle_out_of_scope("handle_out_of_scope Node<br/>(Fixed Rejection Message)")
-        handle_retreive_faqs("handle_retreive_faqs Node<br/>(Retrieves from KB)")
-        
-        route_intent -.->|"out_of_scope"| handle_out_of_scope
-        route_intent -.->|"faq"| handle_retreive_faqs
-        
-        handle_out_of_scope --> END([END])
-        handle_retreive_faqs --> END
-    end
-    class classify_intent,handle_out_of_scope,handle_retreive_faqs node;
-    class route_intent router;
-    class END startEnd;
-
-    %% Link routes from Global Router to specific flows
-    route_intent -.->|"appointment"| collect_appointment_details
-    route_intent -.->|"appointment_reschedule (no email/lookup)"| collect_reschedule_intent
-    route_intent -.->|"appointment_reschedule (lookup done, changes incomplete)"| collect_modification_details
-    route_intent -.->|"appointment_reschedule (all details collected)"| handle_apply_modification
-
-    %% Booking Flow
-    subgraph BookingFlow ["Booking Flow"]
-        collect_appointment_details("collect_appointment_details Node<br/>(Extracts details)")
-        route_after_collecting_details{"route_after_collecting_details<br/>Conditional Edge"}
-        ask_date_confirmation("ask_date_confirmation Node<br/>(Clarify Ambiguous Date)")
-        ask_for_missing_field("ask_for_missing_field Node<br/>(Request missing fields)")
-        handle_appointment_booking("handle_appointment_booking Node<br/>(Handles booking check slots)")
-        
-        collect_appointment_details --> route_after_collecting_details
-        route_after_collecting_details -.->|"ask_date_confirmation"| ask_date_confirmation
-        route_after_collecting_details -.->|"ask_for_missing_field"| ask_for_missing_field
-        route_after_collecting_details -.->|"handle_appointment_booking"| handle_appointment_booking
-        
-        ask_date_confirmation --> END
-        ask_for_missing_field --> END
-        
-        booking_tools_condition{"tools_condition<br/>(Check for tool calls)"}
-        handle_appointment_booking --> booking_tools_condition
-        booking_tools_condition -.->|"No Tool Calls"| END
-        booking_tools_condition -.->|"Has Tool Calls"| booking_tools
-    end
-    class collect_appointment_details,ask_date_confirmation,ask_for_missing_field,handle_appointment_booking node;
-    class route_after_collecting_details,booking_tools_condition router;
-
-    %% Rescheduling Flow
-    subgraph RescheduleFlow ["Rescheduling Flow"]
-        %% Phase 1 & 2: Email Lookup
-        collect_reschedule_intent("collect_reschedule_intent Node<br/>(Extract email)")
-        route_after_collecting_reschedule_intent{"route_after_collecting_reschedule_intent<br/>Conditional Edge"}
-        ask_for_email("ask_for_email Node<br/>(Prompt for email)")
-        handle_appointment_lookup("handle_appointment_lookup Node<br/>(Check user appointments)")
-        
-        collect_reschedule_intent --> route_after_collecting_reschedule_intent
-        route_after_collecting_reschedule_intent -.->|"ask_for_email"| ask_for_email
-        route_after_collecting_reschedule_intent -.->|"handle_appointment_lookup"| handle_appointment_lookup
-        
-        ask_for_email --> END
-        
-        lookup_tools_condition{"tools_condition<br/>(Check for tool calls)"}
-        handle_appointment_lookup --> lookup_tools_condition
-        lookup_tools_condition -.->|"No Tool Calls"| END
-        lookup_tools_condition -.->|"Has Tool Calls"| reschedule_tools
-
-        %% Phase 3 & 4: Modification Details & Apply
-        collect_modification_details("collect_modification_details Node<br/>(Extract target changes)")
-        route_after_collecting_modification{"route_after_collecting_modification<br/>Conditional Edge"}
-        handle_apply_modification("handle_apply_modification Node<br/>(Executes modification turn)")
-        
-        collect_modification_details --> route_after_collecting_modification
-        route_after_collecting_modification -.->|"ask_date_confirmation"| ask_date_confirmation
-        route_after_collecting_modification -.->|"handle_apply_modification"| handle_apply_modification
-        
-        apply_tools_condition{"tools_condition<br/>(Check for tool calls)"}
-        handle_apply_modification --> apply_tools_condition
-        apply_tools_condition -.->|"No Tool Calls"| END
-        apply_tools_condition -.->|"Has Tool Calls"| reschedule_tools
-    end
-    class collect_reschedule_intent,handle_appointment_lookup,collect_modification_details,handle_apply_modification,ask_for_email node;
-    class route_after_collecting_reschedule_intent,route_after_collecting_modification,lookup_tools_condition,apply_tools_condition router;
-
-    %% Tools Execution Layer
-    subgraph ToolNodeGroup ["Tool Execution Layer"]
-        booking_tools[["booking_tools ToolNode<br/>- check_available_appointment_slots<br/>- book_appointment"]]
-        reschedule_tools[["reschedule_tools ToolNode<br/>- get_appointments_by_email<br/>- check_available_appointment_slots<br/>- modify_appointment"]]
-        
-        booking_tools -->|Returns ToolMessage| handle_appointment_booking
-        
-        route_after_reschedule_tools{"route_after_reschedule_tools<br/>Conditional Edge"}
-        reschedule_tools --> route_after_reschedule_tools
-        route_after_reschedule_tools -.->|"get_appointments_by_email"| handle_appointment_lookup
-        route_after_reschedule_tools -.->|"other tools"| handle_apply_modification
-    end
-    class booking_tools,reschedule_tools tool;
-    class route_after_reschedule_tools router;
-
-    %% External Tool to DB Connections
-    booking_tools -.->|Writes/Queries| Database
-    reschedule_tools -.->|Writes/Queries| Database
-    
-    %% Graph Session checkpoint connection
-    START -.->|Loads State| Checkpointer
-    END -.->|Saves State| Checkpointer
-```
-
----
+1. `POST /chat` resolves the conversation, closes its database session, and invokes LangGraph with the new user message. The conversation ID is the checkpoint thread ID. The route writes the user and assistant messages together after the graph returns. [Chat route](back-end/app/api/routes/chat.py)
+2. The classifier routes the turn. Booking collects a treatment, date, time, name, and email. Rescheduling looks up upcoming appointments by email and validates the selected appointment ID against those results. The extraction prompts include calendar dates and the last offered times. The scheduling service matches the requested treatment against the catalog. [Graph](back-end/app/agent/graph.py) · [Booking](back-end/app/agent/booking.py) · [Rescheduling](back-end/app/agent/rescheduling.py)
+3. A complete draft receives a preview. A standalone yes or no answers a pending summary directly. A reply that also changes the time or treatment goes through extraction and receives a revised preview. A confirmed write rechecks availability inside the transaction. Reschedules exclude only the selected appointment when checking occupied slots. If a slot is lost, the dialogue builds the guest's reply and the next turn's offered times from the same availability read. [Scheduling service](back-end/app/services/scheduling_service.py) · [Scheduling dialogue](back-end/app/agent/scheduling_dialogue.py)
+4. FAQ turns retrieve reference material through the RAG service. During a booking, the graph adds an invitation to resume after obtaining the reusable FAQ answer. The HTTP response exposes the current drafts and per-turn operation names to the inspector. [FAQ node](back-end/app/agent/nodes.py) · [RAG service](back-end/app/services/rag_service.py)
 
 ## 🛠️ Technology Stack (Backend)
 
@@ -163,9 +20,9 @@ graph TD
 | :--- | :--- | :--- |
 | **API Core** | [FastAPI](https://fastapi.tiangolo.com/) | High-performance, asynchronous REST API router |
 | **State Machine** | [LangGraph](https://langchain-ai.github.io/langgraph/) | Handles conversation state, routing conditional edges, and loops |
-| **LLM Interface** | [LangChain Core](https://github.com/langchain-ai/langchain) | Tool binding, structured outputs, and prompt templating |
+| **LLM Interface** | [LangChain Core](https://github.com/langchain-ai/langchain) | Structured model output and prompt templating |
 | **Database ORM** | [SQLModel](https://sqlmodel.tiangolo.com/) | Modern Python SQL database wrapper combining SQLAlchemy & Pydantic |
-| **Fuzzy Matching** | `difflib` (Python Standard Lib) | Levenshtein ratio matching for spa treatment validation |
+| **Fuzzy Matching** | `difflib` (Python Standard Lib) | Sequence matching for spa treatment validation |
 | **Timezone Management** | `zoneinfo` | Standardized scheduling using local zone `Asia/Karachi` |
 
 ---
@@ -181,50 +38,27 @@ graph TD
 
 ---
 
-## 🛡️ Guardrails & Safety Architecture
+## Backend architecture
 
-### 1. Deterministic Out-of-Scope Filter
-If a user requests tasks unrelated to the spa (e.g. *"Write a Python script"* or *"What is 15 * 30?"*):
-* It is intercepted immediately at the `classify_intent` stage.
-* The graph redirects to `handle_out_of_scope`.
-* The server bypasses vector databases, tools, and heavy LLM chains entirely, returning a cached refusal message, avoiding unnecessary API charges.
-
-### 2. State Checkpointing & Persistence
-Using LangGraph's `PostgresSaver` checkpointing, the full conversation state is persisted automatically across the stateful graph:
-* Every user-agent interaction step is versioned and saved using a `thread_id` (corresponds to the SQL database `Conversation.id`).
-* This setup provides long-term application memory, fault tolerance for API timeouts, and unlocks the potential for "Time Travel" debugging or "Human-in-the-Loop" pausing.
-
-### 3. Tool Binding Isolation
-We maintain separate Tool Nodes (`booking_tool_node` and `reschedule_tool_node`) for different phases of the graph. This limits the agent's attack surface, ensuring rescheduling tools cannot accidentally run during booking phases.
-
----
-
-## 📂 Project Structure (Backend)
-
-```bash
-back-end/
-├── app/
-│   ├── agent/
-│   │   ├── graph.py       # LangGraph compilation, node declaration, and edges
-│   │   ├── nodes.py       # Node implementation logic and prompts
-│   │   ├── state.py       # AgentState TypedDict schema
-│   │   ├── tools.py       # Database-bound tools (booking, modify slots)
-│   │   └── chat_model.py  # Model initialization interfaces (Groq, Gemini)
-│   ├── api/
-│   │   ├── routes/
-│   │   │   └── chat.py    # Main POST /chat API endpoint
-│   │   └── dependencies.py# DB injection helper
-│   ├── core/
-│   │   ├── config.py      # Pydantic Settings
-│   │   ├── database.py    # Database connection engine
-│   │   └── vectordb.py    # Pinecone vector store retrieval setup
-│   └── models/
-│       └── domain.py      # SQLModel database tables (User, Appointment, Conversation, Message)
-├── .env                   # Environment variables (Neon, Groq, Gemini, Pinecone)
-└── requirements.txt       # Dependencies
+```mermaid
+flowchart LR
+    Chat["POST /chat"] --> Graph["LangGraph"]
+    Graph <--> Checkpoints["PostgreSQL checkpoints"]
+    Graph --> Booking["Booking"]
+    Graph --> Rescheduling["Rescheduling"]
+    Graph --> FAQ["FAQ"]
+    Booking --> Scheduler["SchedulingService"]
+    Rescheduling --> Scheduler
+    Scheduler --> Repos["SQLModel repositories"]
+    Chat --> Repos
+    Repos --> DB["Conversations, messages, and appointments"]
+    FAQ --> RAG["RAGService"]
 ```
 
----
+- **Graph and state.** `app/agent/graph.py` registers stable node names and supplies one scheduler per graph. `state.py` defines the checkpoint fields. `chat_model.py` binds extraction schemas and model fallbacks. `prompts.py` assembles the calendar and conversation context.
+- **Conversation logic.** `booking.py` and `rescheduling.py` own their drafts and route each turn. `scheduling_dialogue.py` handles shared date/time changes, confirmation, slot offers, and recovery. `nodes.py` contains the classifier, FAQ, and out-of-scope handlers.
+- **Scheduling and storage.** `app/services/scheduling_service.py` opens a session for each database operation. The repositories perform catalog, user, conversation, and appointment queries. PostgreSQL advisory locks and a unique index protect scheduled start times. The slot grid and booking horizon are defined in `app/utils/date_utils.py` and application settings.
+- **FAQ ingestion.** The admin-protected upload route calls `app/services/rag_service.py` to ingest PDF content. FAQ answers and retrieval contexts are cached separately from booking state.
 
 ## ⚙️ Running Locally (Backend)
 

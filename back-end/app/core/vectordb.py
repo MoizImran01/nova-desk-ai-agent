@@ -1,20 +1,24 @@
-import os
+from functools import lru_cache
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
 from app.core.config import settings
 
-# 1. Initialize Google's Cloud Embeddings
-embeddings = GoogleGenerativeAIEmbeddings(
-    model="models/gemini-embedding-001",
-    google_api_key=settings.GOOGLE_GEMINI_API_KEY,
-    output_dimensionality=768
-)
 
-os.environ["PINECONE_API_KEY"] = settings.PINECONE_API_KEY
+@lru_cache(maxsize=1)
+def get_embeddings() -> GoogleGenerativeAIEmbeddings:
+    """Return a cached singleton GoogleGenerativeAIEmbeddings client."""
+    return GoogleGenerativeAIEmbeddings(
+        model=settings.EMBEDDING_MODEL_NAME,
+        google_api_key=settings.GOOGLE_GEMINI_API_KEY,
+        output_dimensionality=settings.EMBEDDING_DIMENSIONS,
+    )
 
-def get_vector_store():
 
+@lru_cache(maxsize=1)
+def get_vector_store() -> PineconeVectorStore:
+    """Return a cached singleton PineconeVectorStore instance without mutating os.environ at import time."""
     return PineconeVectorStore(
-        index_name="nova-spa-faqs", 
-        embedding=embeddings
+        index_name=settings.PINECONE_INDEX_NAME,
+        embedding=get_embeddings(),
+        pinecone_api_key=settings.PINECONE_API_KEY,
     )
