@@ -1,0 +1,2641 @@
+{
+  "config": {
+    "top_k": 3,
+    "embedding_model": "models/gemini-embedding-001",
+    "pinecone_index": "nova-spa-faqs",
+    "generator_model": "gemini-3.5-flash-lite",
+    "judge_model": "gemini-3.1-flash-lite",
+    "total_questions": 30,
+    "answerable_questions": 24,
+    "unanswerable_questions": 6,
+    "total_judge_llm_calls": 221
+  },
+  "overall_all_30": {
+    "count": 30,
+    "metrics": {
+      "Precision@3": {
+        "mean_score": 0.5333,
+        "pass_rate": 1.0,
+        "passed_count": 30,
+        "total_count": 30
+      },
+      "Recall@3": {
+        "mean_score": 1.0,
+        "pass_rate": 1.0,
+        "passed_count": 30,
+        "total_count": 30
+      },
+      "MRR@3": {
+        "mean_score": 1.0,
+        "pass_rate": 1.0,
+        "passed_count": 30,
+        "total_count": 30
+      },
+      "Faithfulness": {
+        "mean_score": 0.9667,
+        "pass_rate": 0.9667,
+        "passed_count": 29,
+        "total_count": 30
+      },
+      "Answer Relevancy": {
+        "mean_score": 0.9583,
+        "pass_rate": 0.9333,
+        "passed_count": 28,
+        "total_count": 30
+      }
+    }
+  },
+  "overall_answerable_24": {
+    "count": 24,
+    "metrics": {
+      "Precision@3": {
+        "mean_score": 0.4166,
+        "pass_rate": 1.0,
+        "passed_count": 24,
+        "total_count": 24
+      },
+      "Recall@3": {
+        "mean_score": 1.0,
+        "pass_rate": 1.0,
+        "passed_count": 24,
+        "total_count": 24
+      },
+      "MRR@3": {
+        "mean_score": 1.0,
+        "pass_rate": 1.0,
+        "passed_count": 24,
+        "total_count": 24
+      },
+      "Faithfulness": {
+        "mean_score": 0.9583,
+        "pass_rate": 0.9583,
+        "passed_count": 23,
+        "total_count": 24
+      },
+      "Answer Relevancy": {
+        "mean_score": 0.9896,
+        "pass_rate": 0.9583,
+        "passed_count": 23,
+        "total_count": 24
+      }
+    }
+  },
+  "by_split": {
+    "development": {
+      "count": 20,
+      "metrics": {
+        "Precision@3": {
+          "mean_score": 0.55,
+          "pass_rate": 1.0,
+          "passed_count": 20,
+          "total_count": 20
+        },
+        "Recall@3": {
+          "mean_score": 1.0,
+          "pass_rate": 1.0,
+          "passed_count": 20,
+          "total_count": 20
+        },
+        "MRR@3": {
+          "mean_score": 1.0,
+          "pass_rate": 1.0,
+          "passed_count": 20,
+          "total_count": 20
+        },
+        "Faithfulness": {
+          "mean_score": 1.0,
+          "pass_rate": 1.0,
+          "passed_count": 20,
+          "total_count": 20
+        },
+        "Answer Relevancy": {
+          "mean_score": 0.9375,
+          "pass_rate": 0.9,
+          "passed_count": 18,
+          "total_count": 20
+        }
+      }
+    },
+    "holdout": {
+      "count": 10,
+      "metrics": {
+        "Precision@3": {
+          "mean_score": 0.5,
+          "pass_rate": 1.0,
+          "passed_count": 10,
+          "total_count": 10
+        },
+        "Recall@3": {
+          "mean_score": 1.0,
+          "pass_rate": 1.0,
+          "passed_count": 10,
+          "total_count": 10
+        },
+        "MRR@3": {
+          "mean_score": 1.0,
+          "pass_rate": 1.0,
+          "passed_count": 10,
+          "total_count": 10
+        },
+        "Faithfulness": {
+          "mean_score": 0.9,
+          "pass_rate": 0.9,
+          "passed_count": 9,
+          "total_count": 10
+        },
+        "Answer Relevancy": {
+          "mean_score": 1.0,
+          "pass_rate": 1.0,
+          "passed_count": 10,
+          "total_count": 10
+        }
+      }
+    }
+  },
+  "by_category": {
+    "direct": {
+      "count": 10,
+      "metrics": {
+        "Precision@3": {
+          "mean_score": 0.3333,
+          "pass_rate": 1.0,
+          "passed_count": 10,
+          "total_count": 10
+        },
+        "Recall@3": {
+          "mean_score": 1.0,
+          "pass_rate": 1.0,
+          "passed_count": 10,
+          "total_count": 10
+        },
+        "MRR@3": {
+          "mean_score": 1.0,
+          "pass_rate": 1.0,
+          "passed_count": 10,
+          "total_count": 10
+        },
+        "Faithfulness": {
+          "mean_score": 1.0,
+          "pass_rate": 1.0,
+          "passed_count": 10,
+          "total_count": 10
+        },
+        "Answer Relevancy": {
+          "mean_score": 1.0,
+          "pass_rate": 1.0,
+          "passed_count": 10,
+          "total_count": 10
+        }
+      }
+    },
+    "multi": {
+      "count": 6,
+      "metrics": {
+        "Precision@3": {
+          "mean_score": 0.6111,
+          "pass_rate": 1.0,
+          "passed_count": 6,
+          "total_count": 6
+        },
+        "Recall@3": {
+          "mean_score": 1.0,
+          "pass_rate": 1.0,
+          "passed_count": 6,
+          "total_count": 6
+        },
+        "MRR@3": {
+          "mean_score": 1.0,
+          "pass_rate": 1.0,
+          "passed_count": 6,
+          "total_count": 6
+        },
+        "Faithfulness": {
+          "mean_score": 1.0,
+          "pass_rate": 1.0,
+          "passed_count": 6,
+          "total_count": 6
+        },
+        "Answer Relevancy": {
+          "mean_score": 0.9583,
+          "pass_rate": 0.8333,
+          "passed_count": 5,
+          "total_count": 6
+        }
+      }
+    },
+    "paraphrase": {
+      "count": 8,
+      "metrics": {
+        "Precision@3": {
+          "mean_score": 0.375,
+          "pass_rate": 1.0,
+          "passed_count": 8,
+          "total_count": 8
+        },
+        "Recall@3": {
+          "mean_score": 1.0,
+          "pass_rate": 1.0,
+          "passed_count": 8,
+          "total_count": 8
+        },
+        "MRR@3": {
+          "mean_score": 1.0,
+          "pass_rate": 1.0,
+          "passed_count": 8,
+          "total_count": 8
+        },
+        "Faithfulness": {
+          "mean_score": 0.875,
+          "pass_rate": 0.875,
+          "passed_count": 7,
+          "total_count": 8
+        },
+        "Answer Relevancy": {
+          "mean_score": 1.0,
+          "pass_rate": 1.0,
+          "passed_count": 8,
+          "total_count": 8
+        }
+      }
+    },
+    "unanswerable": {
+      "count": 6,
+      "metrics": {
+        "Precision@3": {
+          "mean_score": 1.0,
+          "pass_rate": 1.0,
+          "passed_count": 6,
+          "total_count": 6
+        },
+        "Recall@3": {
+          "mean_score": 1.0,
+          "pass_rate": 1.0,
+          "passed_count": 6,
+          "total_count": 6
+        },
+        "MRR@3": {
+          "mean_score": 1.0,
+          "pass_rate": 1.0,
+          "passed_count": 6,
+          "total_count": 6
+        },
+        "Faithfulness": {
+          "mean_score": 1.0,
+          "pass_rate": 1.0,
+          "passed_count": 6,
+          "total_count": 6
+        },
+        "Answer Relevancy": {
+          "mean_score": 0.8333,
+          "pass_rate": 0.8333,
+          "passed_count": 5,
+          "total_count": 6
+        }
+      }
+    }
+  },
+  "results": [
+    {
+      "id": "faq-01",
+      "split": "development",
+      "category": "direct",
+      "question": "What are the clinic's Saturday hours?",
+      "expected": "10 AM to 5 PM.",
+      "actual_output": "Our Saturday hours are 10:00 AM – 5:00 PM ✨",
+      "evidence": [
+        {
+          "id": "5caee8310814b5ddc575bd028e274eda",
+          "page": 1,
+          "quote": "Saturday: 10:00 AM – 5:00 PM",
+          "grade": 2
+        }
+      ],
+      "required_facts": [
+        "Saturday opens at 10 AM",
+        "Saturday closes at 5 PM"
+      ],
+      "retrieved_doc_ids": [
+        "5caee8310814b5ddc575bd028e274eda",
+        "9b16a2b2c9c58bcda9e7d4d38de18510",
+        "d91ecc5fbd461a5fe129f99d01a0c328"
+      ],
+      "retrieved_chunks_meta": [
+        {
+          "doc_id": "5caee8310814b5ddc575bd028e274eda",
+          "page": 0.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "9b16a2b2c9c58bcda9e7d4d38de18510",
+          "page": 8.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "d91ecc5fbd461a5fe129f99d01a0c328",
+          "page": 0.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        }
+      ],
+      "retrieval_context": [
+        "General Information\nLocation: 123 Wellness Blvd, Suite 200, Beverly Hills, CA 90210 Phone: (555) 123-4567 | Email: info@novawellness.com Hours: Monday–Friday: 9:00 AM – 7:00 PM | Saturday: 10:00 AM – 5:00 PM | Sunday: Closed Parking: Complimentary valet parking available on-site.",
+        "Bringing Guests\nCan I bring my child or a friend to my appointment? To maintain a serene, safe, and sterile medical environment, we ask that you do not bring children to your appointment. Friends or family members are welcome to wait in our luxury reception lounge while you receive your treatment.",
+        "Cancellation & Rescheduling Policy\n24+ Hours Notice: Full cancellation or reschedule at no charge. 12–24 Hours Notice: 50% treatment fee applied. Under 12 Hours or No-Show: 100% treatment fee applied."
+      ],
+      "metrics": {
+        "Precision@3": {
+          "score": 0.3333,
+          "passed": true,
+          "reason": "1/3 retrieved chunks matched ground-truth evidence (Raw Precision@3=0.33, Normalized Precision@3=1.00).",
+          "threshold": 0.25
+        },
+        "Recall@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Found all 1/1 ground-truth evidence items in top-3.",
+          "threshold": 0.8
+        },
+        "MRR@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "First relevant evidence chunk appeared at rank #1 (RR=1.00).",
+          "threshold": 0.5
+        },
+        "Faithfulness": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and faithfulness!",
+          "threshold": 0.8
+        },
+        "Answer Relevancy": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the response is perfectly accurate and directly addresses the user's question about Saturday hours with no irrelevant information.",
+          "threshold": 0.8
+        }
+      }
+    },
+    {
+      "id": "faq-02",
+      "split": "development",
+      "category": "direct",
+      "question": "How much is a Botox visit and how long is the appointment?",
+      "expected": "$300 and 30 minutes.",
+      "actual_output": "A Botox visit is $300 and the duration is 30 minutes ✨.",
+      "evidence": [
+        {
+          "id": "729433539f2f7e4d8996ab67de3ddcee",
+          "page": 1,
+          "quote": "Price: $300 Duration: 30 minutes",
+          "grade": 2
+        }
+      ],
+      "required_facts": [
+        "Botox costs $300",
+        "Botox takes 30 minutes"
+      ],
+      "retrieved_doc_ids": [
+        "729433539f2f7e4d8996ab67de3ddcee",
+        "491e4d8919ed5d855a0f640298daf1ce",
+        "b035896e0fe71d54e66648f8b9e54eb4"
+      ],
+      "retrieved_chunks_meta": [
+        {
+          "doc_id": "729433539f2f7e4d8996ab67de3ddcee",
+          "page": 0.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "491e4d8919ed5d855a0f640298daf1ce",
+          "page": 6.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "b035896e0fe71d54e66648f8b9e54eb4",
+          "page": 1.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        }
+      ],
+      "retrieval_context": [
+        "Botox®\nDescription: FDA-approved neurotoxin injection that temporarily relaxes facial muscles to smooth dynamic wrinkles and fine lines (crow's feet, forehead lines, frown lines). Price: $300 Duration: 30 minutes Downtime & Results: Zero downtime. Results appear in 3–5 days with full results at 14 days. Lasts 3–4 months. Aftercare: Stay upright for 4 hours; avoid strenuous exercise, alcohol, and rubbing the injection site for 24 hours.",
+        "Consultations & First Visits\nDo I have to get treated on the same day as my consultation? No. While same-day treatments are often available, there is absolutely no pressure. You are welcome to take your customized plan home and schedule the treatment for a later date.",
+        "Dysport®\nDescription: Fast-acting neurotoxin injection specifically targeting moderate- to-severe frown lines between the eyebrows (glabellar lines). Price: $275 Duration: 30 minutes Downtime & Results: Zero downtime. Results begin in 2–3 days and last 3–4 months."
+      ],
+      "metrics": {
+        "Precision@3": {
+          "score": 0.3333,
+          "passed": true,
+          "reason": "1/3 retrieved chunks matched ground-truth evidence (Raw Precision@3=0.33, Normalized Precision@3=1.00).",
+          "threshold": 0.25
+        },
+        "Recall@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Found all 1/1 ground-truth evidence items in top-3.",
+          "threshold": 0.8
+        },
+        "MRR@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "First relevant evidence chunk appeared at rank #1 (RR=1.00).",
+          "threshold": 0.5
+        },
+        "Faithfulness": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and faithfulness!",
+          "threshold": 0.8
+        },
+        "Answer Relevancy": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the response directly and accurately addresses both the cost and duration of a Botox visit with perfect clarity!",
+          "threshold": 0.8
+        }
+      }
+    },
+    {
+      "id": "faq-03",
+      "split": "holdout",
+      "category": "direct",
+      "question": "How long do Juvederm results last?",
+      "expected": "9 to 18 months depending on the treated area.",
+      "actual_output": "Juvederm results last 9–18 months depending on the treated area ✨.",
+      "evidence": [
+        {
+          "id": "f0e502285f10caf37f6dda3e331dc9a8",
+          "page": 2,
+          "quote": "Results last 9–18 months",
+          "grade": 2
+        }
+      ],
+      "required_facts": [
+        "Results last 9 to 18 months"
+      ],
+      "retrieved_doc_ids": [
+        "f0e502285f10caf37f6dda3e331dc9a8",
+        "e88e1948592cb630801ebde183ade9e8",
+        "38dae4af7c9de23519de09cbed07aaf3"
+      ],
+      "retrieved_chunks_meta": [
+        {
+          "doc_id": "f0e502285f10caf37f6dda3e331dc9a8",
+          "page": 1.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "e88e1948592cb630801ebde183ade9e8",
+          "page": 7.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "38dae4af7c9de23519de09cbed07aaf3",
+          "page": 1.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        }
+      ],
+      "retrieval_context": [
+        "Juvederm®\nDescription: Premium hyaluronic acid dermal filler designed to restore mid- face volume, contour cheeks, and enhance lips. Price: $650 Duration: 45 minutes Downtime & Results: Immediate results with mild swelling/bruising lasting 2–5 days. Results last 9–18 months depending on the treated area.",
+        "Filler Corrections\nWhat if I don't like my filler results? Don't panic! Hyaluronic acid fillers (like Juvederm and Restylane) are completely reversible. We can inject an enzyme called Hyaluronidase to safely and quickly dissolve the filler. Note: Sculptra cannot be dissolved.",
+        "Restylane®\nDescription: Targeted hyaluronic acid dermal filler designed for delicate areas including under-eye hollows (tear troughs) and nasolabial folds. Price: $600 Duration: 45 minutes Downtime & Results: Immediate volume restoration. Results last 9–12 months."
+      ],
+      "metrics": {
+        "Precision@3": {
+          "score": 0.3333,
+          "passed": true,
+          "reason": "1/3 retrieved chunks matched ground-truth evidence (Raw Precision@3=0.33, Normalized Precision@3=1.00).",
+          "threshold": 0.25
+        },
+        "Recall@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Found all 1/1 ground-truth evidence items in top-3.",
+          "threshold": 0.8
+        },
+        "MRR@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "First relevant evidence chunk appeared at rank #1 (RR=1.00).",
+          "threshold": 0.5
+        },
+        "Faithfulness": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and faithfulness!",
+          "threshold": 0.8
+        },
+        "Answer Relevancy": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the response is perfectly accurate and directly addresses the inquiry about Juvederm longevity with helpful, relevant information!",
+          "threshold": 0.8
+        }
+      }
+    },
+    {
+      "id": "faq-04",
+      "split": "holdout",
+      "category": "direct",
+      "question": "What does Sculptra cost?",
+      "expected": "$800.",
+      "actual_output": "Sculptra costs $800 ✨",
+      "evidence": [
+        {
+          "id": "01068317d5bb82873eada13ea75ef372",
+          "page": 2,
+          "quote": "Price: $800",
+          "grade": 2
+        }
+      ],
+      "required_facts": [
+        "Sculptra costs $800"
+      ],
+      "retrieved_doc_ids": [
+        "01068317d5bb82873eada13ea75ef372",
+        "f0e502285f10caf37f6dda3e331dc9a8",
+        "13f9986d29965a24a443ce74ebe2d5fc"
+      ],
+      "retrieved_chunks_meta": [
+        {
+          "doc_id": "01068317d5bb82873eada13ea75ef372",
+          "page": 1.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "f0e502285f10caf37f6dda3e331dc9a8",
+          "page": 1.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "13f9986d29965a24a443ce74ebe2d5fc",
+          "page": 5.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        }
+      ],
+      "retrieval_context": [
+        "Sculptra®\nDescription: Poly-L-lactic acid biostimulatory injectable that stimulates natural collagen production deep within the dermis to restore facial volume and structural support. Price: $800 Duration: 60 minutes Downtime & Results: Gradual, natural results developing over 2–4 months that last up to 2 years.",
+        "Juvederm®\nDescription: Premium hyaluronic acid dermal filler designed to restore mid- face volume, contour cheeks, and enhance lips. Price: $650 Duration: 45 minutes Downtime & Results: Immediate results with mild swelling/bruising lasting 2–5 days. Results last 9–18 months depending on the treated area.",
+        "Radiofrequency (RF) Skin Tightening\nDescription: Targeted RF energy heating collagen fibers in deep tissue layers to lift and firm sagging skin on the face, neck, or body. Price: $300 Duration: 45 minutes Downtime: Zero downtime; skin may appear lightly flushed for 1–2 hours."
+      ],
+      "metrics": {
+        "Precision@3": {
+          "score": 0.3333,
+          "passed": true,
+          "reason": "1/3 retrieved chunks matched ground-truth evidence (Raw Precision@3=0.33, Normalized Precision@3=1.00).",
+          "threshold": 0.25
+        },
+        "Recall@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Found all 1/1 ground-truth evidence items in top-3.",
+          "threshold": 0.8
+        },
+        "MRR@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "First relevant evidence chunk appeared at rank #1 (RR=1.00).",
+          "threshold": 0.5
+        },
+        "Faithfulness": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and faithfulness!",
+          "threshold": 0.8
+        },
+        "Answer Relevancy": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the response is perfectly relevant and directly addresses the inquiry about Sculptra costs with helpful information!",
+          "threshold": 0.8
+        }
+      }
+    },
+    {
+      "id": "faq-05",
+      "split": "development",
+      "category": "direct",
+      "question": "How much time should I allow for a HydraFacial?",
+      "expected": "45 minutes.",
+      "actual_output": "A HydraFacial takes 45 minutes ✨.",
+      "evidence": [
+        {
+          "id": "7683b77941aad5973a6f33dd43f78f98",
+          "page": 3,
+          "quote": "Price: $175 Duration: 45 minutes",
+          "grade": 2
+        }
+      ],
+      "required_facts": [
+        "HydraFacial takes 45 minutes"
+      ],
+      "retrieved_doc_ids": [
+        "7683b77941aad5973a6f33dd43f78f98",
+        "3fd067ea3a712a7f9a05362c8a51f7ca",
+        "b487fb22f89f04356f36801a63169849"
+      ],
+      "retrieved_chunks_meta": [
+        {
+          "doc_id": "7683b77941aad5973a6f33dd43f78f98",
+          "page": 2.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "3fd067ea3a712a7f9a05362c8a51f7ca",
+          "page": 7.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "b487fb22f89f04356f36801a63169849",
+          "page": 7.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        }
+      ],
+      "retrieval_context": [
+        "HydraFacial®\nDescription: Patented multi-step medical facial utilizing vortex technology to deeply cleanse, extract impurities, and infuse medical-grade antioxidant and hyaluronic serums. Price: $175 Duration: 45 minutes Downtime & Results: Zero downtime; immediate radiant glow. Ideal before events.",
+        "Sun Exposure & Vacations\nCan I go on a beach vacation after treatment? It depends on the treatment. You must strictly avoid sun exposure for 1 to 2 weeks following Laser Skin Resurfacing, IPL, and Chemical Peels to prevent hyperpigmentation. Injectables and HydraFacials do not restrict travel, though daily SPF 30+ is always mandatory!",
+        "Pregnancy & Nursing\nCan I get treatments while pregnant or breastfeeding? Safety is our top priority. Injectables (Botox, fillers), laser therapies, and deep chemical peels are strictly contraindicated during pregnancy and nursing. However, we offer pregnancy-safe HydraFacials and custom oxygen facials to maintain your glow safely!"
+      ],
+      "metrics": {
+        "Precision@3": {
+          "score": 0.3333,
+          "passed": true,
+          "reason": "1/3 retrieved chunks matched ground-truth evidence (Raw Precision@3=0.33, Normalized Precision@3=1.00).",
+          "threshold": 0.25
+        },
+        "Recall@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Found all 1/1 ground-truth evidence items in top-3.",
+          "threshold": 0.8
+        },
+        "MRR@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "First relevant evidence chunk appeared at rank #1 (RR=1.00).",
+          "threshold": 0.5
+        },
+        "Faithfulness": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and faithfulness!",
+          "threshold": 0.8
+        },
+        "Answer Relevancy": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the response is perfectly accurate and directly addresses the inquiry with no irrelevant information included. Great job!",
+          "threshold": 0.8
+        }
+      }
+    },
+    {
+      "id": "faq-06",
+      "split": "development",
+      "category": "direct",
+      "question": "How many laser hair removal sessions do you recommend and how far apart?",
+      "expected": "6 to 8 sessions spaced 4 to 6 weeks apart.",
+      "actual_output": "We recommend a series of 6–8 sessions spaced 4–6 weeks apart ✨.",
+      "evidence": [
+        {
+          "id": "41d5643f1145844c4b033e82d196a4d0",
+          "page": 4,
+          "quote": "Series of 6–8 sessions spaced 4–6 weeks apart.",
+          "grade": 2
+        }
+      ],
+      "required_facts": [
+        "6 to 8 sessions",
+        "4 to 6 weeks apart"
+      ],
+      "retrieved_doc_ids": [
+        "41d5643f1145844c4b033e82d196a4d0",
+        "491e4d8919ed5d855a0f640298daf1ce",
+        "d91ecc5fbd461a5fe129f99d01a0c328"
+      ],
+      "retrieved_chunks_meta": [
+        {
+          "doc_id": "41d5643f1145844c4b033e82d196a4d0",
+          "page": 3.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "491e4d8919ed5d855a0f640298daf1ce",
+          "page": 6.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "d91ecc5fbd461a5fe129f99d01a0c328",
+          "page": 0.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        }
+      ],
+      "retrieval_context": [
+        "Laser Hair Removal\nDescription: Concentrated light energy targeting melanin in active hair follicles to achieve long-lasting hair reduction safely across face and body areas. Price: $200 Duration: 30 minutes Recommendation: Series of 6–8 sessions spaced 4–6 weeks apart. Preparation: Shave the area 24 hours prior; avoid sun exposure, waxing, or plucking for 2 weeks prior.",
+        "Consultations & First Visits\nDo I have to get treated on the same day as my consultation? No. While same-day treatments are often available, there is absolutely no pressure. You are welcome to take your customized plan home and schedule the treatment for a later date.",
+        "Cancellation & Rescheduling Policy\n24+ Hours Notice: Full cancellation or reschedule at no charge. 12–24 Hours Notice: 50% treatment fee applied. Under 12 Hours or No-Show: 100% treatment fee applied."
+      ],
+      "metrics": {
+        "Precision@3": {
+          "score": 0.3333,
+          "passed": true,
+          "reason": "1/3 retrieved chunks matched ground-truth evidence (Raw Precision@3=0.33, Normalized Precision@3=1.00).",
+          "threshold": 0.25
+        },
+        "Recall@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Found all 1/1 ground-truth evidence items in top-3.",
+          "threshold": 0.8
+        },
+        "MRR@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "First relevant evidence chunk appeared at rank #1 (RR=1.00).",
+          "threshold": 0.5
+        },
+        "Faithfulness": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and faithfulness!",
+          "threshold": 0.8
+        },
+        "Answer Relevancy": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the response is perfectly relevant, accurate, and directly addresses the user's inquiry with helpful information!",
+          "threshold": 0.8
+        }
+      }
+    },
+    {
+      "id": "faq-07",
+      "split": "development",
+      "category": "direct",
+      "question": "Does laser skin tightening have downtime?",
+      "expected": "No downtime. Normal activity can resume immediately.",
+      "actual_output": "Laser skin tightening has no downtime, and you can resume normal activities immediately ✨.",
+      "evidence": [
+        {
+          "id": "6dd9dc764cf061324f3c44bb2795b67a",
+          "page": 5,
+          "quote": "Resume normal activities immediately.",
+          "grade": 2
+        }
+      ],
+      "required_facts": [
+        "No downtime or immediate return to normal activity"
+      ],
+      "retrieved_doc_ids": [
+        "6dd9dc764cf061324f3c44bb2795b67a",
+        "13f9986d29965a24a443ce74ebe2d5fc",
+        "14448984dcc15a71e72f310438f26199"
+      ],
+      "retrieved_chunks_meta": [
+        {
+          "doc_id": "6dd9dc764cf061324f3c44bb2795b67a",
+          "page": 4.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "13f9986d29965a24a443ce74ebe2d5fc",
+          "page": 5.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "14448984dcc15a71e72f310438f26199",
+          "page": 3.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        }
+      ],
+      "retrieval_context": [
+        "Laser Skin Tightening\nDescription: Non-ablative laser wavelength heating the dermal layers to contract tissue and firm lax skin without damaging the surface. Price: $400 Duration: 45 minutes Downtime: None. Resume normal activities immediately.",
+        "Radiofrequency (RF) Skin Tightening\nDescription: Targeted RF energy heating collagen fibers in deep tissue layers to lift and firm sagging skin on the face, neck, or body. Price: $300 Duration: 45 minutes Downtime: Zero downtime; skin may appear lightly flushed for 1–2 hours.",
+        "Laser Skin Resurfacing\nDescription: Advanced fractional laser technology removing damaged skin columns to stimulate collagen remodeling for deeper wrinkles, sun spots, and surgical/acne scars. Price: $500 Duration: 60 minutes Downtime & Results: Redness and mild peeling for 4–7 days. Progressive improvements continue for 6 months."
+      ],
+      "metrics": {
+        "Precision@3": {
+          "score": 0.3333,
+          "passed": true,
+          "reason": "1/3 retrieved chunks matched ground-truth evidence (Raw Precision@3=0.33, Normalized Precision@3=1.00).",
+          "threshold": 0.25
+        },
+        "Recall@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Found all 1/1 ground-truth evidence items in top-3.",
+          "threshold": 0.8
+        },
+        "MRR@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "First relevant evidence chunk appeared at rank #1 (RR=1.00).",
+          "threshold": 0.5
+        },
+        "Faithfulness": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and faithfulness!",
+          "threshold": 0.8
+        },
+        "Answer Relevancy": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the response is perfectly relevant, accurate, and directly addresses the user's question about laser skin tightening downtime with great clarity!",
+          "threshold": 0.8
+        }
+      }
+    },
+    {
+      "id": "faq-08",
+      "split": "holdout",
+      "category": "direct",
+      "question": "How long do Ultherapy results take to show?",
+      "expected": "Gradual lifting is visible over 2 to 3 months.",
+      "actual_output": "Ultherapy results are gradual, with lifting and tightening becoming visible over 2 to 3 months ✨.",
+      "evidence": [
+        {
+          "id": "ea9b606ce4d60729ce7bd149368c0d5b",
+          "page": 6,
+          "quote": "Gradual lifting and tightening visible over 2–3 months.",
+          "grade": 2
+        }
+      ],
+      "required_facts": [
+        "Ultherapy changes appear over 2 to 3 months"
+      ],
+      "retrieved_doc_ids": [
+        "ea9b606ce4d60729ce7bd149368c0d5b",
+        "13f9986d29965a24a443ce74ebe2d5fc",
+        "6dd9dc764cf061324f3c44bb2795b67a"
+      ],
+      "retrieved_chunks_meta": [
+        {
+          "doc_id": "ea9b606ce4d60729ce7bd149368c0d5b",
+          "page": 5.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "13f9986d29965a24a443ce74ebe2d5fc",
+          "page": 5.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "6dd9dc764cf061324f3c44bb2795b67a",
+          "page": 4.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        }
+      ],
+      "retrieval_context": [
+        "Ultrasound Therapy (Ultherapy / HIFU)\nDescription: Focused ultrasound waves penetrating the SMAS layer (structural tissue) to lift and tighten the brow, neck, and jawline. Price: $600 Duration: 60 minutes Results: Gradual lifting and tightening visible over 2–3 months.",
+        "Radiofrequency (RF) Skin Tightening\nDescription: Targeted RF energy heating collagen fibers in deep tissue layers to lift and firm sagging skin on the face, neck, or body. Price: $300 Duration: 45 minutes Downtime: Zero downtime; skin may appear lightly flushed for 1–2 hours.",
+        "Laser Skin Tightening\nDescription: Non-ablative laser wavelength heating the dermal layers to contract tissue and firm lax skin without damaging the surface. Price: $400 Duration: 45 minutes Downtime: None. Resume normal activities immediately."
+      ],
+      "metrics": {
+        "Precision@3": {
+          "score": 0.3333,
+          "passed": true,
+          "reason": "1/3 retrieved chunks matched ground-truth evidence (Raw Precision@3=0.33, Normalized Precision@3=1.00).",
+          "threshold": 0.25
+        },
+        "Recall@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Found all 1/1 ground-truth evidence items in top-3.",
+          "threshold": 0.8
+        },
+        "MRR@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "First relevant evidence chunk appeared at rank #1 (RR=1.00).",
+          "threshold": 0.5
+        },
+        "Faithfulness": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and faithfulness!",
+          "threshold": 0.8
+        },
+        "Answer Relevancy": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the response is perfectly accurate and directly addresses the timeline for Ultherapy results with no irrelevant information.",
+          "threshold": 0.8
+        }
+      }
+    },
+    {
+      "id": "faq-09",
+      "split": "holdout",
+      "category": "direct",
+      "question": "Which vendor rewards programs do you accept?",
+      "expected": "Allē and ASPIRE.",
+      "actual_output": "We proudly participate in Allē (by Allergan/Juvederm/Botox) and ASPIRE (by Galderma/Restylane/Dysport) ✨",
+      "evidence": [
+        {
+          "id": "5d4473fd787ddbe3b74915722e0ba7d9",
+          "page": 7,
+          "quote": "Allē (by Allergan/Juvederm/Botox) and ASPIRE",
+          "grade": 2
+        }
+      ],
+      "required_facts": [
+        "Allē rewards",
+        "ASPIRE rewards"
+      ],
+      "retrieved_doc_ids": [
+        "5d4473fd787ddbe3b74915722e0ba7d9",
+        "3e37936193bca4d49b6f5fa2e7e9672c",
+        "e8812fbf3909d53eb07bc20fad6adc26"
+      ],
+      "retrieved_chunks_meta": [
+        {
+          "doc_id": "5d4473fd787ddbe3b74915722e0ba7d9",
+          "page": 6.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "3e37936193bca4d49b6f5fa2e7e9672c",
+          "page": 6.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "e8812fbf3909d53eb07bc20fad6adc26",
+          "page": 0.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        }
+      ],
+      "retrieval_context": [
+        "Memberships & Loyalty Programs\nDo you participate in vendor rewards programs? Yes, we proudly participate in Allē (by Allergan/Juvederm/Botox) and ASPIRE (by Galderma/Restylane/Dysport). We can help you earn and redeem points at checkout!",
+        "Memberships & Loyalty Programs\nDo you offer a membership program? Yes! Our Nova VIP Membership includes special pricing on Botox/Dysport, monthly complimentary B12 injections, 10% off all retail skincare products, and exclusive access to members-only events.",
+        "Payment & Financing\nWe accept all major credit/debit cards, HSA/FSA cards (for eligible wellness services), and medical financing through CareCredit and Cherry (0% interest options available)."
+      ],
+      "metrics": {
+        "Precision@3": {
+          "score": 0.3333,
+          "passed": true,
+          "reason": "1/3 retrieved chunks matched ground-truth evidence (Raw Precision@3=0.33, Normalized Precision@3=1.00).",
+          "threshold": 0.25
+        },
+        "Recall@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Found all 1/1 ground-truth evidence items in top-3.",
+          "threshold": 0.8
+        },
+        "MRR@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "First relevant evidence chunk appeared at rank #1 (RR=1.00).",
+          "threshold": 0.5
+        },
+        "Faithfulness": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and faithfulness!",
+          "threshold": 0.8
+        },
+        "Answer Relevancy": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the response is perfectly relevant and directly addresses the inquiry with clarity and precision.",
+          "threshold": 0.8
+        }
+      }
+    },
+    {
+      "id": "faq-10",
+      "split": "development",
+      "category": "direct",
+      "question": "Do your gift cards expire?",
+      "expected": "No.",
+      "actual_output": "No, Nova Wellness Gift Cards do not expire ✨.",
+      "evidence": [
+        {
+          "id": "9f4f0abe5ae70ff63ce97f979ffd16fc",
+          "page": 9,
+          "quote": "They do not expire",
+          "grade": 2
+        }
+      ],
+      "required_facts": [
+        "Gift cards do not expire"
+      ],
+      "retrieved_doc_ids": [
+        "9f4f0abe5ae70ff63ce97f979ffd16fc",
+        "d91ecc5fbd461a5fe129f99d01a0c328",
+        "3e37936193bca4d49b6f5fa2e7e9672c"
+      ],
+      "retrieved_chunks_meta": [
+        {
+          "doc_id": "9f4f0abe5ae70ff63ce97f979ffd16fc",
+          "page": 8.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "d91ecc5fbd461a5fe129f99d01a0c328",
+          "page": 0.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "3e37936193bca4d49b6f5fa2e7e9672c",
+          "page": 6.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        }
+      ],
+      "retrieval_context": [
+        "Gift Cards\nDo you sell gift cards? Yes! Nova Wellness Gift Cards can be purchased in- clinic or online. They do not expire and can be used toward any service, package, or retail skincare product.",
+        "Cancellation & Rescheduling Policy\n24+ Hours Notice: Full cancellation or reschedule at no charge. 12–24 Hours Notice: 50% treatment fee applied. Under 12 Hours or No-Show: 100% treatment fee applied.",
+        "Memberships & Loyalty Programs\nDo you offer a membership program? Yes! Our Nova VIP Membership includes special pricing on Botox/Dysport, monthly complimentary B12 injections, 10% off all retail skincare products, and exclusive access to members-only events."
+      ],
+      "metrics": {
+        "Precision@3": {
+          "score": 0.3333,
+          "passed": true,
+          "reason": "1/3 retrieved chunks matched ground-truth evidence (Raw Precision@3=0.33, Normalized Precision@3=1.00).",
+          "threshold": 0.25
+        },
+        "Recall@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Found all 1/1 ground-truth evidence items in top-3.",
+          "threshold": 0.8
+        },
+        "MRR@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "First relevant evidence chunk appeared at rank #1 (RR=1.00).",
+          "threshold": 0.5
+        },
+        "Faithfulness": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and faithfulness!",
+          "threshold": 0.8
+        },
+        "Answer Relevancy": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the response directly and accurately addresses the inquiry about gift card expiration with no irrelevant information.",
+          "threshold": 0.8
+        }
+      }
+    },
+    {
+      "id": "faq-11",
+      "split": "development",
+      "category": "paraphrase",
+      "question": "If I bail on my appointment 18 hours out, how much am I on the hook for?",
+      "expected": "50% of the treatment fee.",
+      "actual_output": "A 50% treatment fee is applied if you cancel or reschedule between 12 and 24 hours before your appointment ✨.",
+      "evidence": [
+        {
+          "id": "d91ecc5fbd461a5fe129f99d01a0c328",
+          "page": 1,
+          "quote": "12–24 Hours Notice: 50% treatment fee applied.",
+          "grade": 2
+        }
+      ],
+      "required_facts": [
+        "Cancellation with 18 hours notice costs 50% of the treatment fee"
+      ],
+      "retrieved_doc_ids": [
+        "d91ecc5fbd461a5fe129f99d01a0c328",
+        "491e4d8919ed5d855a0f640298daf1ce",
+        "22f4fbf7ac141316474b7e1556c0e58a"
+      ],
+      "retrieved_chunks_meta": [
+        {
+          "doc_id": "d91ecc5fbd461a5fe129f99d01a0c328",
+          "page": 0.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "491e4d8919ed5d855a0f640298daf1ce",
+          "page": 6.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "22f4fbf7ac141316474b7e1556c0e58a",
+          "page": 8.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        }
+      ],
+      "retrieval_context": [
+        "Cancellation & Rescheduling Policy\n24+ Hours Notice: Full cancellation or reschedule at no charge. 12–24 Hours Notice: 50% treatment fee applied. Under 12 Hours or No-Show: 100% treatment fee applied.",
+        "Consultations & First Visits\nDo I have to get treated on the same day as my consultation? No. While same-day treatments are often available, there is absolutely no pressure. You are welcome to take your customized plan home and schedule the treatment for a later date.",
+        "Tipping Policy\nAm I supposed to tip my provider? Gratuity is never expected for medical procedures performed by our Nurses, PAs, or Doctors (such as injectables, lasers, and IV therapy). If you receive a spa service from one of our Medical Aestheticians (like a HydraFacial or superficial peel), a standard 15–20% gratuity is highly appreciated but entirely optional."
+      ],
+      "metrics": {
+        "Precision@3": {
+          "score": 0.3333,
+          "passed": true,
+          "reason": "1/3 retrieved chunks matched ground-truth evidence (Raw Precision@3=0.33, Normalized Precision@3=1.00).",
+          "threshold": 0.25
+        },
+        "Recall@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Found all 1/1 ground-truth evidence items in top-3.",
+          "threshold": 0.8
+        },
+        "MRR@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "First relevant evidence chunk appeared at rank #1 (RR=1.00).",
+          "threshold": 0.5
+        },
+        "Faithfulness": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and faithfulness!",
+          "threshold": 0.8
+        },
+        "Answer Relevancy": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the response is perfectly relevant and directly addresses the user's inquiry with helpful information.",
+          "threshold": 0.8
+        }
+      }
+    },
+    {
+      "id": "faq-12",
+      "split": "development",
+      "category": "paraphrase",
+      "question": "Do I have to hunt for a parking spot or do you have valet?",
+      "expected": "Complimentary on-site valet parking is available.",
+      "actual_output": "We offer complimentary valet parking on-site ✨.",
+      "evidence": [
+        {
+          "id": "5caee8310814b5ddc575bd028e274eda",
+          "page": 1,
+          "quote": "Complimentary valet parking available on-site.",
+          "grade": 2
+        }
+      ],
+      "required_facts": [
+        "Complimentary on-site valet"
+      ],
+      "retrieved_doc_ids": [
+        "5caee8310814b5ddc575bd028e274eda",
+        "9b16a2b2c9c58bcda9e7d4d38de18510",
+        "491e4d8919ed5d855a0f640298daf1ce"
+      ],
+      "retrieved_chunks_meta": [
+        {
+          "doc_id": "5caee8310814b5ddc575bd028e274eda",
+          "page": 0.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "9b16a2b2c9c58bcda9e7d4d38de18510",
+          "page": 8.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "491e4d8919ed5d855a0f640298daf1ce",
+          "page": 6.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        }
+      ],
+      "retrieval_context": [
+        "General Information\nLocation: 123 Wellness Blvd, Suite 200, Beverly Hills, CA 90210 Phone: (555) 123-4567 | Email: info@novawellness.com Hours: Monday–Friday: 9:00 AM – 7:00 PM | Saturday: 10:00 AM – 5:00 PM | Sunday: Closed Parking: Complimentary valet parking available on-site.",
+        "Bringing Guests\nCan I bring my child or a friend to my appointment? To maintain a serene, safe, and sterile medical environment, we ask that you do not bring children to your appointment. Friends or family members are welcome to wait in our luxury reception lounge while you receive your treatment.",
+        "Consultations & First Visits\nDo I have to get treated on the same day as my consultation? No. While same-day treatments are often available, there is absolutely no pressure. You are welcome to take your customized plan home and schedule the treatment for a later date."
+      ],
+      "metrics": {
+        "Precision@3": {
+          "score": 0.3333,
+          "passed": true,
+          "reason": "1/3 retrieved chunks matched ground-truth evidence (Raw Precision@3=0.33, Normalized Precision@3=1.00).",
+          "threshold": 0.25
+        },
+        "Recall@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Found all 1/1 ground-truth evidence items in top-3.",
+          "threshold": 0.8
+        },
+        "MRR@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "First relevant evidence chunk appeared at rank #1 (RR=1.00).",
+          "threshold": 0.5
+        },
+        "Faithfulness": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and faithfulness!",
+          "threshold": 0.8
+        },
+        "Answer Relevancy": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the response directly and accurately addresses the user's question about parking options with perfect clarity.",
+          "threshold": 0.8
+        }
+      }
+    },
+    {
+      "id": "faq-13",
+      "split": "development",
+      "category": "paraphrase",
+      "question": "How soon would I start seeing a change with Dysport?",
+      "expected": "Results begin in 2 to 3 days.",
+      "actual_output": "Results with Dysport begin in 2–3 days ✨.",
+      "evidence": [
+        {
+          "id": "b035896e0fe71d54e66648f8b9e54eb4",
+          "page": 2,
+          "quote": "Results begin in 2–3 days",
+          "grade": 2
+        }
+      ],
+      "required_facts": [
+        "Dysport starts showing results in 2 to 3 days"
+      ],
+      "retrieved_doc_ids": [
+        "b035896e0fe71d54e66648f8b9e54eb4",
+        "729433539f2f7e4d8996ab67de3ddcee",
+        "643d74845a09892b2f1a2cfa6ac76bf2"
+      ],
+      "retrieved_chunks_meta": [
+        {
+          "doc_id": "b035896e0fe71d54e66648f8b9e54eb4",
+          "page": 1.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "729433539f2f7e4d8996ab67de3ddcee",
+          "page": 0.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "643d74845a09892b2f1a2cfa6ac76bf2",
+          "page": 2.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        }
+      ],
+      "retrieval_context": [
+        "Dysport®\nDescription: Fast-acting neurotoxin injection specifically targeting moderate- to-severe frown lines between the eyebrows (glabellar lines). Price: $275 Duration: 30 minutes Downtime & Results: Zero downtime. Results begin in 2–3 days and last 3–4 months.",
+        "Botox®\nDescription: FDA-approved neurotoxin injection that temporarily relaxes facial muscles to smooth dynamic wrinkles and fine lines (crow's feet, forehead lines, frown lines). Price: $300 Duration: 30 minutes Downtime & Results: Zero downtime. Results appear in 3–5 days with full results at 14 days. Lasts 3–4 months. Aftercare: Stay upright for 4 hours; avoid strenuous exercise, alcohol, and rubbing the injection site for 24 hours.",
+        "Kybella®\nDescription: Deoxycholic acid injection that permanently breaks down and absorbs dietary fat cells beneath the chin (submental fullness / double chin). Price: $1,200 Duration: 45 minutes Downtime & Results: Moderate swelling for 5–7 days. Fat reduction is permanent once desired profile contour is achieved (typically 2–4 sessions)."
+      ],
+      "metrics": {
+        "Precision@3": {
+          "score": 0.3333,
+          "passed": true,
+          "reason": "1/3 retrieved chunks matched ground-truth evidence (Raw Precision@3=0.33, Normalized Precision@3=1.00).",
+          "threshold": 0.25
+        },
+        "Recall@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Found all 1/1 ground-truth evidence items in top-3.",
+          "threshold": 0.8
+        },
+        "MRR@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "First relevant evidence chunk appeared at rank #1 (RR=1.00).",
+          "threshold": 0.5
+        },
+        "Faithfulness": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and faithfulness!",
+          "threshold": 0.8
+        },
+        "Answer Relevancy": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the response is perfectly accurate and directly addresses the timeline for Dysport results with no irrelevant information.",
+          "threshold": 0.8
+        }
+      }
+    },
+    {
+      "id": "faq-14",
+      "split": "holdout",
+      "category": "paraphrase",
+      "question": "When can someone check my lips if they look lopsided the day after filler?",
+      "expected": "The clinic waits a full 14 days before assessment or touch-ups.",
+      "actual_output": "You must wait a full 14 days for swelling to subside and the product to settle before any assessment or touch-up can be performed ✨.",
+      "evidence": [
+        {
+          "id": "3fb549498111e1ccc15c65f9b87f3556",
+          "page": 8,
+          "quote": "wait a full 14 days",
+          "grade": 2
+        }
+      ],
+      "required_facts": [
+        "Wait 14 days for assessment"
+      ],
+      "retrieved_doc_ids": [
+        "3fb549498111e1ccc15c65f9b87f3556",
+        "e88e1948592cb630801ebde183ade9e8",
+        "491e4d8919ed5d855a0f640298daf1ce"
+      ],
+      "retrieved_chunks_meta": [
+        {
+          "doc_id": "3fb549498111e1ccc15c65f9b87f3556",
+          "page": 7.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "e88e1948592cb630801ebde183ade9e8",
+          "page": 7.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "491e4d8919ed5d855a0f640298daf1ce",
+          "page": 6.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        }
+      ],
+      "retrieval_context": [
+        "Filler Corrections\nMy lips look uneven the day after filler. Is this normal? Yes! Swelling is almost always asymmetrical. We require all filler patients to wait a full 14 days for swelling to subside and the product to settle before assessing the final result or performing any touch-ups.",
+        "Filler Corrections\nWhat if I don't like my filler results? Don't panic! Hyaluronic acid fillers (like Juvederm and Restylane) are completely reversible. We can inject an enzyme called Hyaluronidase to safely and quickly dissolve the filler. Note: Sculptra cannot be dissolved.",
+        "Consultations & First Visits\nDo I have to get treated on the same day as my consultation? No. While same-day treatments are often available, there is absolutely no pressure. You are welcome to take your customized plan home and schedule the treatment for a later date."
+      ],
+      "metrics": {
+        "Precision@3": {
+          "score": 0.3333,
+          "passed": true,
+          "reason": "1/3 retrieved chunks matched ground-truth evidence (Raw Precision@3=0.33, Normalized Precision@3=1.00).",
+          "threshold": 0.25
+        },
+        "Recall@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Found all 1/1 ground-truth evidence items in top-3.",
+          "threshold": 0.8
+        },
+        "MRR@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "First relevant evidence chunk appeared at rank #1 (RR=1.00).",
+          "threshold": 0.5
+        },
+        "Faithfulness": {
+          "score": 0.0,
+          "passed": false,
+          "reason": "Evaluation error: 504 DEADLINE_EXCEEDED. {'error': {'code': 504, 'message': 'Deadline expired before operation could complete.', 'status': 'DEADLINE_EXCEEDED'}}",
+          "threshold": 0.8
+        },
+        "Answer Relevancy": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the response is perfectly relevant and directly addresses the user's question with helpful, accurate information!",
+          "threshold": 0.8
+        }
+      }
+    },
+    {
+      "id": "faq-15",
+      "split": "development",
+      "category": "paraphrase",
+      "question": "What's the prep if I'm usually waxing but now want laser hair removal?",
+      "expected": "Avoid waxing, plucking and sun exposure for two weeks; shave 24 hours before.",
+      "actual_output": "Shave the area 24 hours prior; avoid sun exposure, waxing, or plucking for 2 weeks prior ✨.",
+      "evidence": [
+        {
+          "id": "41d5643f1145844c4b033e82d196a4d0",
+          "page": 4,
+          "quote": "Shave the area 24 hours prior; avoid sun exposure, waxing, or plucking for 2 weeks prior.",
+          "grade": 2
+        }
+      ],
+      "required_facts": [
+        "Avoid waxing and plucking for 2 weeks",
+        "Avoid sun for 2 weeks",
+        "Shave 24 hours prior"
+      ],
+      "retrieved_doc_ids": [
+        "41d5643f1145844c4b033e82d196a4d0",
+        "491e4d8919ed5d855a0f640298daf1ce",
+        "e0dceadd055997880ba20644c0b854fd"
+      ],
+      "retrieved_chunks_meta": [
+        {
+          "doc_id": "41d5643f1145844c4b033e82d196a4d0",
+          "page": 3.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "491e4d8919ed5d855a0f640298daf1ce",
+          "page": 6.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "e0dceadd055997880ba20644c0b854fd",
+          "page": 4.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        }
+      ],
+      "retrieval_context": [
+        "Laser Hair Removal\nDescription: Concentrated light energy targeting melanin in active hair follicles to achieve long-lasting hair reduction safely across face and body areas. Price: $200 Duration: 30 minutes Recommendation: Series of 6–8 sessions spaced 4–6 weeks apart. Preparation: Shave the area 24 hours prior; avoid sun exposure, waxing, or plucking for 2 weeks prior.",
+        "Consultations & First Visits\nDo I have to get treated on the same day as my consultation? No. While same-day treatments are often available, there is absolutely no pressure. You are welcome to take your customized plan home and schedule the treatment for a later date.",
+        "Laser Tattoo Removal\nDescription: Ultra-fast, high-intensity light pulses breaking down embedded tattoo ink pigments for lymphatic clearance. Price: $250 Duration: 30 minutes Downtime: Minor frosting and crusting for 3–5 days. Multi-session treatment."
+      ],
+      "metrics": {
+        "Precision@3": {
+          "score": 0.3333,
+          "passed": true,
+          "reason": "1/3 retrieved chunks matched ground-truth evidence (Raw Precision@3=0.33, Normalized Precision@3=1.00).",
+          "threshold": 0.25
+        },
+        "Recall@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Found all 1/1 ground-truth evidence items in top-3.",
+          "threshold": 0.8
+        },
+        "MRR@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "First relevant evidence chunk appeared at rank #1 (RR=1.00).",
+          "threshold": 0.5
+        },
+        "Faithfulness": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and faithfulness!",
+          "threshold": 0.8
+        },
+        "Answer Relevancy": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the response is perfectly relevant, accurate, and provides clear, helpful guidance for transitioning from waxing to laser hair removal!",
+          "threshold": 0.8
+        }
+      }
+    },
+    {
+      "id": "faq-16",
+      "split": "development",
+      "category": "paraphrase",
+      "question": "Can my friend hang out somewhere while I get treated?",
+      "expected": "Friends may wait in the reception lounge.",
+      "actual_output": "Friends or family members are welcome to wait in our luxury reception lounge while you receive your treatment ✨.",
+      "evidence": [
+        {
+          "id": "9b16a2b2c9c58bcda9e7d4d38de18510",
+          "page": 9,
+          "quote": "Friends or family members are welcome to wait",
+          "grade": 2
+        }
+      ],
+      "required_facts": [
+        "Friend may wait in reception"
+      ],
+      "retrieved_doc_ids": [
+        "9b16a2b2c9c58bcda9e7d4d38de18510",
+        "491e4d8919ed5d855a0f640298daf1ce",
+        "79ed9161c71a8a7efc19a811e5bad389"
+      ],
+      "retrieved_chunks_meta": [
+        {
+          "doc_id": "9b16a2b2c9c58bcda9e7d4d38de18510",
+          "page": 8.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "491e4d8919ed5d855a0f640298daf1ce",
+          "page": 6.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "79ed9161c71a8a7efc19a811e5bad389",
+          "page": 7.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        }
+      ],
+      "retrieval_context": [
+        "Bringing Guests\nCan I bring my child or a friend to my appointment? To maintain a serene, safe, and sterile medical environment, we ask that you do not bring children to your appointment. Friends or family members are welcome to wait in our luxury reception lounge while you receive your treatment.",
+        "Consultations & First Visits\nDo I have to get treated on the same day as my consultation? No. While same-day treatments are often available, there is absolutely no pressure. You are welcome to take your customized plan home and schedule the treatment for a later date.",
+        "Age Restrictions\nWhat is the minimum age for treatments? Guests must be 18 years or older to receive injectable treatments (Botox, Fillers, Kybella) and laser therapies. Minors (13+) may receive select acne facials and HydraFacials with written consent and the presence of a parent or legal guardian."
+      ],
+      "metrics": {
+        "Precision@3": {
+          "score": 0.3333,
+          "passed": true,
+          "reason": "1/3 retrieved chunks matched ground-truth evidence (Raw Precision@3=0.33, Normalized Precision@3=1.00).",
+          "threshold": 0.25
+        },
+        "Recall@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Found all 1/1 ground-truth evidence items in top-3.",
+          "threshold": 0.8
+        },
+        "MRR@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "First relevant evidence chunk appeared at rank #1 (RR=1.00).",
+          "threshold": 0.5
+        },
+        "Faithfulness": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and faithfulness!",
+          "threshold": 0.8
+        },
+        "Answer Relevancy": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the response is perfectly relevant, accurate, and directly addresses the user's inquiry with helpful information!",
+          "threshold": 0.8
+        }
+      }
+    },
+    {
+      "id": "faq-17",
+      "split": "development",
+      "category": "paraphrase",
+      "question": "If I just come in for a consult, do I have to buy a treatment that day?",
+      "expected": "No. Consultation is complimentary with no obligation; you may schedule later.",
+      "actual_output": "No, there is absolutely no pressure to get treated on the same day as your consultation, and you are welcome to take your customized plan home and schedule the treatment for a later date ✨.",
+      "evidence": [
+        {
+          "id": "491e4d8919ed5d855a0f640298daf1ce",
+          "page": 7,
+          "quote": "there is absolutely no pressure",
+          "grade": 2
+        },
+        {
+          "id": "e03010dd09ec5bc473e268825ef8969f",
+          "page": 7,
+          "quote": "complimentary, no-obligation",
+          "grade": 1
+        }
+      ],
+      "required_facts": [
+        "Treatment is optional on consultation day"
+      ],
+      "retrieved_doc_ids": [
+        "491e4d8919ed5d855a0f640298daf1ce",
+        "e03010dd09ec5bc473e268825ef8969f",
+        "d91ecc5fbd461a5fe129f99d01a0c328"
+      ],
+      "retrieved_chunks_meta": [
+        {
+          "doc_id": "491e4d8919ed5d855a0f640298daf1ce",
+          "page": 6.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "e03010dd09ec5bc473e268825ef8969f",
+          "page": 6.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "d91ecc5fbd461a5fe129f99d01a0c328",
+          "page": 0.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        }
+      ],
+      "retrieval_context": [
+        "Consultations & First Visits\nDo I have to get treated on the same day as my consultation? No. While same-day treatments are often available, there is absolutely no pressure. You are welcome to take your customized plan home and schedule the treatment for a later date.",
+        "Consultations & First Visits\nAre consultations really free? Yes! We offer complimentary, no-obligation consultations with our medical providers to discuss your goals and create a custom treatment plan.",
+        "Cancellation & Rescheduling Policy\n24+ Hours Notice: Full cancellation or reschedule at no charge. 12–24 Hours Notice: 50% treatment fee applied. Under 12 Hours or No-Show: 100% treatment fee applied."
+      ],
+      "metrics": {
+        "Precision@3": {
+          "score": 0.6667,
+          "passed": true,
+          "reason": "2/3 retrieved chunks matched ground-truth evidence (Raw Precision@3=0.67, Normalized Precision@3=1.00).",
+          "threshold": 0.25
+        },
+        "Recall@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Found all 2/2 ground-truth evidence items in top-3.",
+          "threshold": 0.8
+        },
+        "MRR@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "First relevant evidence chunk appeared at rank #1 (RR=1.00).",
+          "threshold": 0.5
+        },
+        "Faithfulness": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and faithfulness!",
+          "threshold": 0.8
+        },
+        "Answer Relevancy": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the response directly and accurately addresses the user's question with no irrelevant information included. Great job providing a clear and helpful answer!",
+          "threshold": 0.8
+        }
+      }
+    },
+    {
+      "id": "faq-18",
+      "split": "holdout",
+      "category": "paraphrase",
+      "question": "Is there a discount on skincare if I join VIP?",
+      "expected": "10% off all retail skincare products.",
+      "actual_output": "Yes, our Nova VIP Membership includes 10% off all retail skincare products ✨.",
+      "evidence": [
+        {
+          "id": "3e37936193bca4d49b6f5fa2e7e9672c",
+          "page": 7,
+          "quote": "10% off all retail skincare products",
+          "grade": 2
+        }
+      ],
+      "required_facts": [
+        "VIP receives 10% off all retail skincare"
+      ],
+      "retrieved_doc_ids": [
+        "3e37936193bca4d49b6f5fa2e7e9672c",
+        "5d4473fd787ddbe3b74915722e0ba7d9",
+        "22f4fbf7ac141316474b7e1556c0e58a"
+      ],
+      "retrieved_chunks_meta": [
+        {
+          "doc_id": "3e37936193bca4d49b6f5fa2e7e9672c",
+          "page": 6.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "5d4473fd787ddbe3b74915722e0ba7d9",
+          "page": 6.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "22f4fbf7ac141316474b7e1556c0e58a",
+          "page": 8.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        }
+      ],
+      "retrieval_context": [
+        "Memberships & Loyalty Programs\nDo you offer a membership program? Yes! Our Nova VIP Membership includes special pricing on Botox/Dysport, monthly complimentary B12 injections, 10% off all retail skincare products, and exclusive access to members-only events.",
+        "Memberships & Loyalty Programs\nDo you participate in vendor rewards programs? Yes, we proudly participate in Allē (by Allergan/Juvederm/Botox) and ASPIRE (by Galderma/Restylane/Dysport). We can help you earn and redeem points at checkout!",
+        "Tipping Policy\nAm I supposed to tip my provider? Gratuity is never expected for medical procedures performed by our Nurses, PAs, or Doctors (such as injectables, lasers, and IV therapy). If you receive a spa service from one of our Medical Aestheticians (like a HydraFacial or superficial peel), a standard 15–20% gratuity is highly appreciated but entirely optional."
+      ],
+      "metrics": {
+        "Precision@3": {
+          "score": 0.3333,
+          "passed": true,
+          "reason": "1/3 retrieved chunks matched ground-truth evidence (Raw Precision@3=0.33, Normalized Precision@3=1.00).",
+          "threshold": 0.25
+        },
+        "Recall@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Found all 1/1 ground-truth evidence items in top-3.",
+          "threshold": 0.8
+        },
+        "MRR@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "First relevant evidence chunk appeared at rank #1 (RR=1.00).",
+          "threshold": 0.5
+        },
+        "Faithfulness": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and faithfulness!",
+          "threshold": 0.8
+        },
+        "Answer Relevancy": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the response is perfectly relevant and directly addresses the user's inquiry with helpful information!",
+          "threshold": 0.8
+        }
+      }
+    },
+    {
+      "id": "faq-19",
+      "split": "development",
+      "category": "multi",
+      "question": "How do Botox and Dysport compare on price and when results first appear?",
+      "expected": "Botox costs $300 and begins in 3 to 5 days. Dysport costs $275 and begins in 2 to 3 days.",
+      "actual_output": "Here is how Botox and Dysport compare:\n\n* **Price:** Botox is $300 and Dysport is $275 ✨\n* **When Results First Appear:** Results for Botox appear in 3–5 days (with full results at 14 days), while results for Dysport begin in 2–3 days.",
+      "evidence": [
+        {
+          "id": "729433539f2f7e4d8996ab67de3ddcee",
+          "page": 1,
+          "quote": "Results appear in 3–5 days",
+          "grade": 2
+        },
+        {
+          "id": "b035896e0fe71d54e66648f8b9e54eb4",
+          "page": 2,
+          "quote": "Results begin in 2–3 days",
+          "grade": 2
+        }
+      ],
+      "required_facts": [
+        "Botox costs $300",
+        "Botox onset in 3 to 5 days",
+        "Dysport costs $275",
+        "Dysport onset in 2 to 3 days"
+      ],
+      "retrieved_doc_ids": [
+        "b035896e0fe71d54e66648f8b9e54eb4",
+        "729433539f2f7e4d8996ab67de3ddcee",
+        "643d74845a09892b2f1a2cfa6ac76bf2"
+      ],
+      "retrieved_chunks_meta": [
+        {
+          "doc_id": "b035896e0fe71d54e66648f8b9e54eb4",
+          "page": 1.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "729433539f2f7e4d8996ab67de3ddcee",
+          "page": 0.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "643d74845a09892b2f1a2cfa6ac76bf2",
+          "page": 2.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        }
+      ],
+      "retrieval_context": [
+        "Dysport®\nDescription: Fast-acting neurotoxin injection specifically targeting moderate- to-severe frown lines between the eyebrows (glabellar lines). Price: $275 Duration: 30 minutes Downtime & Results: Zero downtime. Results begin in 2–3 days and last 3–4 months.",
+        "Botox®\nDescription: FDA-approved neurotoxin injection that temporarily relaxes facial muscles to smooth dynamic wrinkles and fine lines (crow's feet, forehead lines, frown lines). Price: $300 Duration: 30 minutes Downtime & Results: Zero downtime. Results appear in 3–5 days with full results at 14 days. Lasts 3–4 months. Aftercare: Stay upright for 4 hours; avoid strenuous exercise, alcohol, and rubbing the injection site for 24 hours.",
+        "Kybella®\nDescription: Deoxycholic acid injection that permanently breaks down and absorbs dietary fat cells beneath the chin (submental fullness / double chin). Price: $1,200 Duration: 45 minutes Downtime & Results: Moderate swelling for 5–7 days. Fat reduction is permanent once desired profile contour is achieved (typically 2–4 sessions)."
+      ],
+      "metrics": {
+        "Precision@3": {
+          "score": 0.6667,
+          "passed": true,
+          "reason": "2/3 retrieved chunks matched ground-truth evidence (Raw Precision@3=0.67, Normalized Precision@3=1.00).",
+          "threshold": 0.25
+        },
+        "Recall@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Found all 2/2 ground-truth evidence items in top-3.",
+          "threshold": 0.8
+        },
+        "MRR@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "First relevant evidence chunk appeared at rank #1 (RR=1.00).",
+          "threshold": 0.5
+        },
+        "Faithfulness": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and faithfulness!",
+          "threshold": 0.8
+        },
+        "Answer Relevancy": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the response directly and accurately addresses both the pricing and the onset of results for Botox and Dysport, maintaining perfect relevance throughout.",
+          "threshold": 0.8
+        }
+      }
+    },
+    {
+      "id": "faq-20",
+      "split": "holdout",
+      "category": "multi",
+      "question": "How much does hormone replacement therapy cost and what must I do first?",
+      "expected": "$250; supervised medical consultation and initial lab work are required.",
+      "actual_output": "Hormone Replacement Therapy is $250 ✨, and the requirement is a supervised medical consultation and initial lab work.",
+      "evidence": [
+        {
+          "id": "e08cb202595e58c18ed259392ae3a89e",
+          "page": 6,
+          "quote": "Price: $250",
+          "grade": 2
+        }
+      ],
+      "required_facts": [
+        "HRT costs $250",
+        "Supervised medical consultation",
+        "Initial labs or blood work review"
+      ],
+      "retrieved_doc_ids": [
+        "e08cb202595e58c18ed259392ae3a89e",
+        "e03010dd09ec5bc473e268825ef8969f",
+        "2076ccf2498ba10adc23a2942f1dd0e9"
+      ],
+      "retrieved_chunks_meta": [
+        {
+          "doc_id": "e08cb202595e58c18ed259392ae3a89e",
+          "page": 5.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "e03010dd09ec5bc473e268825ef8969f",
+          "page": 6.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "2076ccf2498ba10adc23a2942f1dd0e9",
+          "page": 6.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        }
+      ],
+      "retrieval_context": [
+        "Hormone Replacement Therapy (HRT)\nDescription: Comprehensive medical consultation, blood work review, and custom bioidentical hormone balancing plan for vitality and metabolic health. Price: $250 Duration: 45 minutes Requirement: Supervised medical consultation and initial lab work.",
+        "Consultations & First Visits\nAre consultations really free? Yes! We offer complimentary, no-obligation consultations with our medical providers to discuss your goals and create a custom treatment plan.",
+        "Peptide Therapy\nDescription: Targeted amino acid sequences formulated to stimulate cellular repair, boost natural growth hormone production, and support metabolic vitality. Price: $195 Duration: 30 minutes"
+      ],
+      "metrics": {
+        "Precision@3": {
+          "score": 0.3333,
+          "passed": true,
+          "reason": "1/3 retrieved chunks matched ground-truth evidence (Raw Precision@3=0.33, Normalized Precision@3=1.00).",
+          "threshold": 0.25
+        },
+        "Recall@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Found all 1/1 ground-truth evidence items in top-3.",
+          "threshold": 0.8
+        },
+        "MRR@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "First relevant evidence chunk appeared at rank #1 (RR=1.00).",
+          "threshold": 0.5
+        },
+        "Faithfulness": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and faithfulness!",
+          "threshold": 0.8
+        },
+        "Answer Relevancy": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the response directly addresses both parts of your question with clear and relevant information. Great job providing a helpful and accurate answer!",
+          "threshold": 0.8
+        }
+      }
+    },
+    {
+      "id": "faq-21",
+      "split": "development",
+      "category": "multi",
+      "question": "Can a 14-year-old get a HydraFacial and what is the listed price?",
+      "expected": "Select HydraFacials are available with written consent and a parent or guardian present. The listed price is $175.",
+      "actual_output": "Minors (13+) may receive select HydraFacials with written consent and the presence of a parent or legal guardian, and the listed price for a HydraFacial is $175 ✨.",
+      "evidence": [
+        {
+          "id": "79ed9161c71a8a7efc19a811e5bad389",
+          "page": 8,
+          "quote": "Minors (13+) may receive select acne facials and HydraFacials",
+          "grade": 2
+        },
+        {
+          "id": "7683b77941aad5973a6f33dd43f78f98",
+          "page": 3,
+          "quote": "Price: $175",
+          "grade": 2
+        }
+      ],
+      "required_facts": [
+        "Teen is eligible for select HydraFacials",
+        "Written consent",
+        "Parent or guardian present",
+        "Listed price is $175"
+      ],
+      "retrieved_doc_ids": [
+        "79ed9161c71a8a7efc19a811e5bad389",
+        "7683b77941aad5973a6f33dd43f78f98",
+        "b487fb22f89f04356f36801a63169849"
+      ],
+      "retrieved_chunks_meta": [
+        {
+          "doc_id": "79ed9161c71a8a7efc19a811e5bad389",
+          "page": 7.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "7683b77941aad5973a6f33dd43f78f98",
+          "page": 2.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "b487fb22f89f04356f36801a63169849",
+          "page": 7.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        }
+      ],
+      "retrieval_context": [
+        "Age Restrictions\nWhat is the minimum age for treatments? Guests must be 18 years or older to receive injectable treatments (Botox, Fillers, Kybella) and laser therapies. Minors (13+) may receive select acne facials and HydraFacials with written consent and the presence of a parent or legal guardian.",
+        "HydraFacial®\nDescription: Patented multi-step medical facial utilizing vortex technology to deeply cleanse, extract impurities, and infuse medical-grade antioxidant and hyaluronic serums. Price: $175 Duration: 45 minutes Downtime & Results: Zero downtime; immediate radiant glow. Ideal before events.",
+        "Pregnancy & Nursing\nCan I get treatments while pregnant or breastfeeding? Safety is our top priority. Injectables (Botox, fillers), laser therapies, and deep chemical peels are strictly contraindicated during pregnancy and nursing. However, we offer pregnancy-safe HydraFacials and custom oxygen facials to maintain your glow safely!"
+      ],
+      "metrics": {
+        "Precision@3": {
+          "score": 0.6667,
+          "passed": true,
+          "reason": "2/3 retrieved chunks matched ground-truth evidence (Raw Precision@3=0.67, Normalized Precision@3=1.00).",
+          "threshold": 0.25
+        },
+        "Recall@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Found all 2/2 ground-truth evidence items in top-3.",
+          "threshold": 0.8
+        },
+        "MRR@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "First relevant evidence chunk appeared at rank #1 (RR=1.00).",
+          "threshold": 0.5
+        },
+        "Faithfulness": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and faithfulness!",
+          "threshold": 0.8
+        },
+        "Answer Relevancy": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the response directly addresses both parts of the user's inquiry with complete accuracy and relevance.",
+          "threshold": 0.8
+        }
+      }
+    },
+    {
+      "id": "faq-22",
+      "split": "holdout",
+      "category": "multi",
+      "question": "Compare CoolSculpting and Ultherapy on price and how soon changes appear.",
+      "expected": "CoolSculpting is $750 with changes over 1 to 3 months. Ultherapy is $600 with changes over 2 to 3 months.",
+      "actual_output": "Here is how CoolSculpting and Ultrasound Therapy (Ultherapy / HIFU) compare:\n\n* **CoolSculpting®:**\n  * **Price:** $750✨\n  * **Results:** Noticeable fat reduction of 20–25% in the treated area appears over 1–3 months.\n\n* **Ultrasound Therapy (Ultherapy / HIFU):**\n  * **Price:** $600\n  * **Results:** Gradual lifting and tightening are visible over 2–3 months.",
+      "evidence": [
+        {
+          "id": "f3ac4f633f3fa4474f51765967f368b1",
+          "page": 5,
+          "quote": "Price: $750",
+          "grade": 2
+        },
+        {
+          "id": "ea9b606ce4d60729ce7bd149368c0d5b",
+          "page": 6,
+          "quote": "Price: $600",
+          "grade": 2
+        }
+      ],
+      "required_facts": [
+        "CoolSculpting costs $750",
+        "CoolSculpting changes in 1 to 3 months",
+        "Ultherapy costs $600",
+        "Ultherapy changes in 2 to 3 months"
+      ],
+      "retrieved_doc_ids": [
+        "f3ac4f633f3fa4474f51765967f368b1",
+        "ea9b606ce4d60729ce7bd149368c0d5b",
+        "13f9986d29965a24a443ce74ebe2d5fc"
+      ],
+      "retrieved_chunks_meta": [
+        {
+          "doc_id": "f3ac4f633f3fa4474f51765967f368b1",
+          "page": 4.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "ea9b606ce4d60729ce7bd149368c0d5b",
+          "page": 5.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "13f9986d29965a24a443ce74ebe2d5fc",
+          "page": 5.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        }
+      ],
+      "retrieval_context": [
+        "CoolSculpting®\nDescription: FDA-cleared cryolipolysis treatment that freezes and permanently destroys stubborn subcutaneous fat cells without surgery. Price: $750 Duration: 60 minutes Downtime & Results: Zero downtime; temporary numbness/tingling. Noticeable fat reduction of 20–25% in the treated area over 1–3 months.",
+        "Ultrasound Therapy (Ultherapy / HIFU)\nDescription: Focused ultrasound waves penetrating the SMAS layer (structural tissue) to lift and tighten the brow, neck, and jawline. Price: $600 Duration: 60 minutes Results: Gradual lifting and tightening visible over 2–3 months.",
+        "Radiofrequency (RF) Skin Tightening\nDescription: Targeted RF energy heating collagen fibers in deep tissue layers to lift and firm sagging skin on the face, neck, or body. Price: $300 Duration: 45 minutes Downtime: Zero downtime; skin may appear lightly flushed for 1–2 hours."
+      ],
+      "metrics": {
+        "Precision@3": {
+          "score": 0.6667,
+          "passed": true,
+          "reason": "2/3 retrieved chunks matched ground-truth evidence (Raw Precision@3=0.67, Normalized Precision@3=1.00).",
+          "threshold": 0.25
+        },
+        "Recall@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Found all 2/2 ground-truth evidence items in top-3.",
+          "threshold": 0.8
+        },
+        "MRR@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "First relevant evidence chunk appeared at rank #1 (RR=1.00).",
+          "threshold": 0.5
+        },
+        "Faithfulness": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and faithfulness!",
+          "threshold": 0.8
+        },
+        "Answer Relevancy": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the response directly addresses both the price and the timeline for results for both procedures with perfect accuracy and clarity. Great job providing such a helpful and focused comparison!",
+          "threshold": 0.8
+        }
+      }
+    },
+    {
+      "id": "faq-23",
+      "split": "development",
+      "category": "multi",
+      "question": "What is the price of a chemical peel and how long should I avoid sunlight afterward?",
+      "expected": "$150. Avoid sun exposure for 1 to 2 weeks.",
+      "actual_output": "A chemical peel is priced at $150, and you must strictly avoid sun exposure for 1 to 2 weeks following the treatment to prevent hyperpigmentation ✨.",
+      "evidence": [
+        {
+          "id": "ed3eb44e07b8f9340f84c681002f66cb",
+          "page": 3,
+          "quote": "Price: $150",
+          "grade": 2
+        },
+        {
+          "id": "3fd067ea3a712a7f9a05362c8a51f7ca",
+          "page": 8,
+          "quote": "strictly avoid sun exposure for 1 to 2 weeks",
+          "grade": 2
+        }
+      ],
+      "required_facts": [
+        "Chemical peel costs $150",
+        "Avoid sun for 1 to 2 weeks afterward"
+      ],
+      "retrieved_doc_ids": [
+        "ed3eb44e07b8f9340f84c681002f66cb",
+        "c0d330966f0f4e5e20cd3ad5235e7334",
+        "3fd067ea3a712a7f9a05362c8a51f7ca"
+      ],
+      "retrieved_chunks_meta": [
+        {
+          "doc_id": "ed3eb44e07b8f9340f84c681002f66cb",
+          "page": 2.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "c0d330966f0f4e5e20cd3ad5235e7334",
+          "page": 4.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "3fd067ea3a712a7f9a05362c8a51f7ca",
+          "page": 7.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        }
+      ],
+      "retrieval_context": [
+        "Chemical Peels\nDescription: Clinical-grade exfoliating acid solution tailored to resurface outer skin layers, fading hyperpigmentation and smoothing texture. Price: $150 Duration: 45 minutes Downtime & Results: Light flaking or peeling for 3–7 days revealing brighter, refreshed skin.",
+        "Intense Pulsed Light (IPL Photofacial)\nDescription: Broad-spectrum light pulses targeting vascular redness, broken capillaries, rosacea, and brown sun damage. Price: $350 Duration: 45 minutes Downtime: Brown spots may darken like coffee grounds and slough off over 5–7 days.",
+        "Sun Exposure & Vacations\nCan I go on a beach vacation after treatment? It depends on the treatment. You must strictly avoid sun exposure for 1 to 2 weeks following Laser Skin Resurfacing, IPL, and Chemical Peels to prevent hyperpigmentation. Injectables and HydraFacials do not restrict travel, though daily SPF 30+ is always mandatory!"
+      ],
+      "metrics": {
+        "Precision@3": {
+          "score": 0.6667,
+          "passed": true,
+          "reason": "2/3 retrieved chunks matched ground-truth evidence (Raw Precision@3=0.67, Normalized Precision@3=1.00).",
+          "threshold": 0.25
+        },
+        "Recall@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Found all 2/2 ground-truth evidence items in top-3.",
+          "threshold": 0.8
+        },
+        "MRR@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "First relevant evidence chunk appeared at rank #1 (RR=1.00).",
+          "threshold": 0.5
+        },
+        "Faithfulness": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and faithfulness!",
+          "threshold": 0.8
+        },
+        "Answer Relevancy": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the response directly and accurately addresses both parts of your question with helpful, relevant information. Great job!",
+          "threshold": 0.8
+        }
+      }
+    },
+    {
+      "id": "faq-24",
+      "split": "development",
+      "category": "multi",
+      "question": "How much is IV therapy, how long does it take, and do I need to tip?",
+      "expected": "$185, 45 minutes; gratuity is never expected for medical procedures including IV therapy.",
+      "actual_output": "IV therapy costs $185 and takes 45 minutes ✨. Gratuity is never expected for IV therapy since it is performed by our nurses, PAs, or doctors.",
+      "evidence": [
+        {
+          "id": "3109fe91333e144cc91e7bb3d6c710d4",
+          "page": 6,
+          "quote": "Price: $185",
+          "grade": 2
+        },
+        {
+          "id": "22f4fbf7ac141316474b7e1556c0e58a",
+          "page": 9,
+          "quote": "lasers, and IV therapy)",
+          "grade": 2
+        }
+      ],
+      "required_facts": [
+        "IV therapy costs $185",
+        "IV therapy lasts 45 minutes",
+        "Gratuity is not expected"
+      ],
+      "retrieved_doc_ids": [
+        "3109fe91333e144cc91e7bb3d6c710d4",
+        "22f4fbf7ac141316474b7e1556c0e58a",
+        "2076ccf2498ba10adc23a2942f1dd0e9"
+      ],
+      "retrieved_chunks_meta": [
+        {
+          "doc_id": "3109fe91333e144cc91e7bb3d6c710d4",
+          "page": 5.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "22f4fbf7ac141316474b7e1556c0e58a",
+          "page": 8.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "2076ccf2498ba10adc23a2942f1dd0e9",
+          "page": 6.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        }
+      ],
+      "retrieval_context": [
+        "IV Therapy\nDescription: Direct intravenous delivery of essential vitamins, antioxidants (like Glutathione and Vitamin C), minerals, and electrolyte hydration fluids. Price: $185 Duration: 45 minutes Benefits: 100% cellular absorption for instant energy, immune support, and skin hydration.",
+        "Tipping Policy\nAm I supposed to tip my provider? Gratuity is never expected for medical procedures performed by our Nurses, PAs, or Doctors (such as injectables, lasers, and IV therapy). If you receive a spa service from one of our Medical Aestheticians (like a HydraFacial or superficial peel), a standard 15–20% gratuity is highly appreciated but entirely optional.",
+        "Peptide Therapy\nDescription: Targeted amino acid sequences formulated to stimulate cellular repair, boost natural growth hormone production, and support metabolic vitality. Price: $195 Duration: 30 minutes"
+      ],
+      "metrics": {
+        "Precision@3": {
+          "score": 0.6667,
+          "passed": true,
+          "reason": "2/3 retrieved chunks matched ground-truth evidence (Raw Precision@3=0.67, Normalized Precision@3=1.00).",
+          "threshold": 0.25
+        },
+        "Recall@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Found all 2/2 ground-truth evidence items in top-3.",
+          "threshold": 0.8
+        },
+        "MRR@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "First relevant evidence chunk appeared at rank #1 (RR=1.00).",
+          "threshold": 0.5
+        },
+        "Faithfulness": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and faithfulness!",
+          "threshold": 0.8
+        },
+        "Answer Relevancy": {
+          "score": 0.75,
+          "passed": false,
+          "reason": "The score is 0.75 because while the response accurately addresses the cost, duration, and tipping policy, it includes unnecessary information regarding staff qualifications that was not requested.",
+          "threshold": 0.8
+        }
+      }
+    },
+    {
+      "id": "faq-25",
+      "split": "holdout",
+      "category": "unanswerable",
+      "question": "How much is the monthly fee to join Nova VIP?",
+      "expected": "The FAQ gives benefits but no monthly fee. Refer to a specialist.",
+      "actual_output": "Our FAQs do not specify the monthly fee for the Nova VIP membership, and I will connect you with a human specialist to confirm it! 🌸",
+      "evidence": [],
+      "required_facts": [],
+      "retrieved_doc_ids": [
+        "3e37936193bca4d49b6f5fa2e7e9672c",
+        "9f4f0abe5ae70ff63ce97f979ffd16fc",
+        "5caee8310814b5ddc575bd028e274eda"
+      ],
+      "retrieved_chunks_meta": [
+        {
+          "doc_id": "3e37936193bca4d49b6f5fa2e7e9672c",
+          "page": 6.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "9f4f0abe5ae70ff63ce97f979ffd16fc",
+          "page": 8.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "5caee8310814b5ddc575bd028e274eda",
+          "page": 0.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        }
+      ],
+      "retrieval_context": [
+        "Memberships & Loyalty Programs\nDo you offer a membership program? Yes! Our Nova VIP Membership includes special pricing on Botox/Dysport, monthly complimentary B12 injections, 10% off all retail skincare products, and exclusive access to members-only events.",
+        "Gift Cards\nDo you sell gift cards? Yes! Nova Wellness Gift Cards can be purchased in- clinic or online. They do not expire and can be used toward any service, package, or retail skincare product.",
+        "General Information\nLocation: 123 Wellness Blvd, Suite 200, Beverly Hills, CA 90210 Phone: (555) 123-4567 | Email: info@novawellness.com Hours: Monday–Friday: 9:00 AM – 7:00 PM | Saturday: 10:00 AM – 5:00 PM | Sunday: Closed Parking: Complimentary valet parking available on-site."
+      ],
+      "metrics": {
+        "Precision@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Unanswerable question (no ground-truth evidence expected).",
+          "threshold": 0.25
+        },
+        "Recall@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Unanswerable question (no ground-truth evidence expected).",
+          "threshold": 0.8
+        },
+        "MRR@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Unanswerable question (no ground-truth evidence expected).",
+          "threshold": 0.5
+        },
+        "Faithfulness": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and faithfulness!",
+          "threshold": 0.8
+        },
+        "Answer Relevancy": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the response is perfectly accurate and directly addresses the user's question with no irrelevant information.",
+          "threshold": 0.8
+        }
+      }
+    },
+    {
+      "id": "faq-26",
+      "split": "holdout",
+      "category": "unanswerable",
+      "question": "Do you take American Express gift cards for deposits on group bookings?",
+      "expected": "The FAQ does not specify this policy. Refer to a specialist.",
+      "actual_output": "Our FAQs do not specify if we take American Express gift cards for deposits on group bookings, so I will connect you with a human specialist to confirm that for you! 🌸",
+      "evidence": [],
+      "required_facts": [],
+      "retrieved_doc_ids": [
+        "e8812fbf3909d53eb07bc20fad6adc26",
+        "9f4f0abe5ae70ff63ce97f979ffd16fc",
+        "79ed9161c71a8a7efc19a811e5bad389"
+      ],
+      "retrieved_chunks_meta": [
+        {
+          "doc_id": "e8812fbf3909d53eb07bc20fad6adc26",
+          "page": 0.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "9f4f0abe5ae70ff63ce97f979ffd16fc",
+          "page": 8.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "79ed9161c71a8a7efc19a811e5bad389",
+          "page": 7.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        }
+      ],
+      "retrieval_context": [
+        "Payment & Financing\nWe accept all major credit/debit cards, HSA/FSA cards (for eligible wellness services), and medical financing through CareCredit and Cherry (0% interest options available).",
+        "Gift Cards\nDo you sell gift cards? Yes! Nova Wellness Gift Cards can be purchased in- clinic or online. They do not expire and can be used toward any service, package, or retail skincare product.",
+        "Age Restrictions\nWhat is the minimum age for treatments? Guests must be 18 years or older to receive injectable treatments (Botox, Fillers, Kybella) and laser therapies. Minors (13+) may receive select acne facials and HydraFacials with written consent and the presence of a parent or legal guardian."
+      ],
+      "metrics": {
+        "Precision@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Unanswerable question (no ground-truth evidence expected).",
+          "threshold": 0.25
+        },
+        "Recall@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Unanswerable question (no ground-truth evidence expected).",
+          "threshold": 0.8
+        },
+        "MRR@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Unanswerable question (no ground-truth evidence expected).",
+          "threshold": 0.5
+        },
+        "Faithfulness": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and faithfulness!",
+          "threshold": 0.8
+        },
+        "Answer Relevancy": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the response is perfectly relevant and directly addresses the inquiry about American Express gift cards with clarity.",
+          "threshold": 0.8
+        }
+      }
+    },
+    {
+      "id": "faq-27",
+      "split": "development",
+      "category": "unanswerable",
+      "question": "What is the exact brand of laser used for hair removal?",
+      "expected": "The FAQ does not identify a brand. Refer to a specialist.",
+      "actual_output": "Our FAQs do not specify the exact brand of laser used for hair removal, and I will connect you with a human specialist to confirm it! 🌸",
+      "evidence": [],
+      "required_facts": [],
+      "retrieved_doc_ids": [
+        "41d5643f1145844c4b033e82d196a4d0",
+        "e0dceadd055997880ba20644c0b854fd",
+        "14448984dcc15a71e72f310438f26199"
+      ],
+      "retrieved_chunks_meta": [
+        {
+          "doc_id": "41d5643f1145844c4b033e82d196a4d0",
+          "page": 3.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "e0dceadd055997880ba20644c0b854fd",
+          "page": 4.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "14448984dcc15a71e72f310438f26199",
+          "page": 3.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        }
+      ],
+      "retrieval_context": [
+        "Laser Hair Removal\nDescription: Concentrated light energy targeting melanin in active hair follicles to achieve long-lasting hair reduction safely across face and body areas. Price: $200 Duration: 30 minutes Recommendation: Series of 6–8 sessions spaced 4–6 weeks apart. Preparation: Shave the area 24 hours prior; avoid sun exposure, waxing, or plucking for 2 weeks prior.",
+        "Laser Tattoo Removal\nDescription: Ultra-fast, high-intensity light pulses breaking down embedded tattoo ink pigments for lymphatic clearance. Price: $250 Duration: 30 minutes Downtime: Minor frosting and crusting for 3–5 days. Multi-session treatment.",
+        "Laser Skin Resurfacing\nDescription: Advanced fractional laser technology removing damaged skin columns to stimulate collagen remodeling for deeper wrinkles, sun spots, and surgical/acne scars. Price: $500 Duration: 60 minutes Downtime & Results: Redness and mild peeling for 4–7 days. Progressive improvements continue for 6 months."
+      ],
+      "metrics": {
+        "Precision@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Unanswerable question (no ground-truth evidence expected).",
+          "threshold": 0.25
+        },
+        "Recall@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Unanswerable question (no ground-truth evidence expected).",
+          "threshold": 0.8
+        },
+        "MRR@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Unanswerable question (no ground-truth evidence expected).",
+          "threshold": 0.5
+        },
+        "Faithfulness": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and faithfulness!",
+          "threshold": 0.8
+        },
+        "Answer Relevancy": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the response directly and accurately addresses the user's question with no irrelevant information included. Great job providing a precise and helpful answer!",
+          "threshold": 0.8
+        }
+      }
+    },
+    {
+      "id": "faq-28",
+      "split": "development",
+      "category": "unanswerable",
+      "question": "Is there a fee to replace a lost Nova gift card?",
+      "expected": "The FAQ does not state a replacement fee. Refer to a specialist.",
+      "actual_output": "Our FAQs do not specify if there is a fee to replace a lost Nova gift card, but I will connect you with a human specialist to confirm it! 🌸",
+      "evidence": [],
+      "required_facts": [],
+      "retrieved_doc_ids": [
+        "9f4f0abe5ae70ff63ce97f979ffd16fc",
+        "3e37936193bca4d49b6f5fa2e7e9672c",
+        "5caee8310814b5ddc575bd028e274eda"
+      ],
+      "retrieved_chunks_meta": [
+        {
+          "doc_id": "9f4f0abe5ae70ff63ce97f979ffd16fc",
+          "page": 8.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "3e37936193bca4d49b6f5fa2e7e9672c",
+          "page": 6.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "5caee8310814b5ddc575bd028e274eda",
+          "page": 0.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        }
+      ],
+      "retrieval_context": [
+        "Gift Cards\nDo you sell gift cards? Yes! Nova Wellness Gift Cards can be purchased in- clinic or online. They do not expire and can be used toward any service, package, or retail skincare product.",
+        "Memberships & Loyalty Programs\nDo you offer a membership program? Yes! Our Nova VIP Membership includes special pricing on Botox/Dysport, monthly complimentary B12 injections, 10% off all retail skincare products, and exclusive access to members-only events.",
+        "General Information\nLocation: 123 Wellness Blvd, Suite 200, Beverly Hills, CA 90210 Phone: (555) 123-4567 | Email: info@novawellness.com Hours: Monday–Friday: 9:00 AM – 7:00 PM | Saturday: 10:00 AM – 5:00 PM | Sunday: Closed Parking: Complimentary valet parking available on-site."
+      ],
+      "metrics": {
+        "Precision@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Unanswerable question (no ground-truth evidence expected).",
+          "threshold": 0.25
+        },
+        "Recall@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Unanswerable question (no ground-truth evidence expected).",
+          "threshold": 0.8
+        },
+        "MRR@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Unanswerable question (no ground-truth evidence expected).",
+          "threshold": 0.5
+        },
+        "Faithfulness": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and faithfulness!",
+          "threshold": 0.8
+        },
+        "Answer Relevancy": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the response is perfectly accurate and directly addresses the inquiry about gift card replacement fees with no irrelevant information.",
+          "threshold": 0.8
+        }
+      }
+    },
+    {
+      "id": "faq-29",
+      "split": "development",
+      "category": "unanswerable",
+      "question": "How many units of Botox does the quoted price include?",
+      "expected": "The FAQ gives a price but no unit count. Refer to a specialist.",
+      "actual_output": "Our FAQs do not specify how many units of Botox are included in the quoted price, but I will connect you with a human specialist to confirm that for you! 🌸",
+      "evidence": [],
+      "required_facts": [],
+      "retrieved_doc_ids": [
+        "729433539f2f7e4d8996ab67de3ddcee",
+        "b035896e0fe71d54e66648f8b9e54eb4",
+        "e03010dd09ec5bc473e268825ef8969f"
+      ],
+      "retrieved_chunks_meta": [
+        {
+          "doc_id": "729433539f2f7e4d8996ab67de3ddcee",
+          "page": 0.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "b035896e0fe71d54e66648f8b9e54eb4",
+          "page": 1.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "e03010dd09ec5bc473e268825ef8969f",
+          "page": 6.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        }
+      ],
+      "retrieval_context": [
+        "Botox®\nDescription: FDA-approved neurotoxin injection that temporarily relaxes facial muscles to smooth dynamic wrinkles and fine lines (crow's feet, forehead lines, frown lines). Price: $300 Duration: 30 minutes Downtime & Results: Zero downtime. Results appear in 3–5 days with full results at 14 days. Lasts 3–4 months. Aftercare: Stay upright for 4 hours; avoid strenuous exercise, alcohol, and rubbing the injection site for 24 hours.",
+        "Dysport®\nDescription: Fast-acting neurotoxin injection specifically targeting moderate- to-severe frown lines between the eyebrows (glabellar lines). Price: $275 Duration: 30 minutes Downtime & Results: Zero downtime. Results begin in 2–3 days and last 3–4 months.",
+        "Consultations & First Visits\nAre consultations really free? Yes! We offer complimentary, no-obligation consultations with our medical providers to discuss your goals and create a custom treatment plan."
+      ],
+      "metrics": {
+        "Precision@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Unanswerable question (no ground-truth evidence expected).",
+          "threshold": 0.25
+        },
+        "Recall@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Unanswerable question (no ground-truth evidence expected).",
+          "threshold": 0.8
+        },
+        "MRR@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Unanswerable question (no ground-truth evidence expected).",
+          "threshold": 0.5
+        },
+        "Faithfulness": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and faithfulness!",
+          "threshold": 0.8
+        },
+        "Answer Relevancy": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the response directly and accurately addresses the inquiry regarding the number of Botox units included in the price.",
+          "threshold": 0.8
+        }
+      }
+    },
+    {
+      "id": "faq-30",
+      "split": "development",
+      "category": "unanswerable",
+      "question": "Can I split the cost across three different credit cards?",
+      "expected": "The FAQ does not state a split-payment policy. Refer to a specialist.",
+      "actual_output": "Our FAQs do not specify if the cost can be split across three different credit cards, so I will connect you with a human specialist to confirm it! 🌸",
+      "evidence": [],
+      "required_facts": [],
+      "retrieved_doc_ids": [
+        "e8812fbf3909d53eb07bc20fad6adc26",
+        "5d4473fd787ddbe3b74915722e0ba7d9",
+        "e03010dd09ec5bc473e268825ef8969f"
+      ],
+      "retrieved_chunks_meta": [
+        {
+          "doc_id": "e8812fbf3909d53eb07bc20fad6adc26",
+          "page": 0.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "5d4473fd787ddbe3b74915722e0ba7d9",
+          "page": 6.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        },
+        {
+          "doc_id": "e03010dd09ec5bc473e268825ef8969f",
+          "page": 6.0,
+          "source": "📋 Med Spa FAQs.pdf"
+        }
+      ],
+      "retrieval_context": [
+        "Payment & Financing\nWe accept all major credit/debit cards, HSA/FSA cards (for eligible wellness services), and medical financing through CareCredit and Cherry (0% interest options available).",
+        "Memberships & Loyalty Programs\nDo you participate in vendor rewards programs? Yes, we proudly participate in Allē (by Allergan/Juvederm/Botox) and ASPIRE (by Galderma/Restylane/Dysport). We can help you earn and redeem points at checkout!",
+        "Consultations & First Visits\nAre consultations really free? Yes! We offer complimentary, no-obligation consultations with our medical providers to discuss your goals and create a custom treatment plan."
+      ],
+      "metrics": {
+        "Precision@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Unanswerable question (no ground-truth evidence expected).",
+          "threshold": 0.25
+        },
+        "Recall@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Unanswerable question (no ground-truth evidence expected).",
+          "threshold": 0.8
+        },
+        "MRR@3": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "Unanswerable question (no ground-truth evidence expected).",
+          "threshold": 0.5
+        },
+        "Faithfulness": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and faithfulness!",
+          "threshold": 0.8
+        },
+        "Answer Relevancy": {
+          "score": 0.0,
+          "passed": false,
+          "reason": "Evaluation error: Error calling model 'gemini-3.1-flash-lite' (RESOURCE_EXHAUSTED): 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 500, model: gemini-3.1-flash-lite, description: Generate content requests per day limit exceeded on Free Tier. See https://aistudio.google.com/docs/rate-limits.\\nPlease retry in 18h47m23.608305711s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://aistudio.google.com/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'description': 'Generate content requests per day limit exceeded on Free Tier. See https://aistudio.google.com/docs/rate-limits.', 'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_requests', 'quotaId': 'GenerateRequestsPerDayPerProjectPerModel-FreeTier', 'quotaDimensions': {'model': 'gemini-3.1-flash-lite', 'location': 'global'}, 'quotaValue': '500'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '67643s'}]}}",
+          "threshold": 0.8
+        }
+      }
+    }
+  ]
+}

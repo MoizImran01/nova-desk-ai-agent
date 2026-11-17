@@ -4,13 +4,19 @@
 .env.*
 !.env.example
 
-# Local review notes
+# Local review notes & private FAQ source PDF
 /architecture-spec.md
 /refactor-backlog.md
 /agent-refactor-plan.md
+📋 Med Spa FAQs.pdf
+
+# DeepEval runtime artifacts
+.deepeval/
+back-end/evals/rag/data/eval_results_cache.jsonl
 
 # Backend
 back-end/venv/
+back-end/.venv-*/
 back-end/__pycache__/
 back-end/**/*.pyc
 
