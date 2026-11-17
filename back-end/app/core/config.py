@@ -1,7 +1,10 @@
 from datetime import time
+from pathlib import Path
 from typing import List, Optional
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_BACKEND_ENV_FILE = str(Path(__file__).resolve().parents[2] / ".env")
 
 
 class Settings(BaseSettings):
@@ -127,7 +130,7 @@ class Settings(BaseSettings):
         return time(self.BUSINESS_CLOSE_HOUR, 0)
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(_BACKEND_ENV_FILE, ".env"),
         env_file_encoding="utf-8",
         extra="ignore",
     )

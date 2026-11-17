@@ -1,0 +1,2 @@
+# Install separately from production requirements.txt (avoids rich/tabulate pin conflicts on Render)
+deepeval>=4.0.0
